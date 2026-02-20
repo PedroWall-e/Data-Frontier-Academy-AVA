@@ -1,10 +1,31 @@
+/* Importação de uma fonte parecida com a RNS Physis caso não a tenha instalada localmente. 
+   Se tiver os ficheiros da RNS Physis (.woff ou .ttf), pode usar o @font-face aqui! */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&display=swap');
+
+:root {
+  /* 👇 COLOQUE AQUI AS CORES OFICIAIS DO SEU MANUAL (Substitua os #) 👇 */
+  --cor-primaria: #3b82f6; /* Ex: O Azul da Data Frontier */
+  --cor-secundaria: #10b981; /* Ex: A cor de destaque/sucesso */
+  --cor-fundo-dark: #0f172a; 
+  --cor-fundo-card: #1e293b;
+  --cor-texto-claro: #f8fafc;
+  --cor-texto-mutado: #94a3b8;
+  
+  /* Se tiver a RNS Physis instalada, mude 'Inter' para 'RNS Physis' */
+  --fonte-oficial: 'Inter', sans-serif; 
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: var(--fonte-oficial);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--cor-fundo-dark);
+  color: var(--cor-texto-claro);
+}
+
+* {
+  box-sizing: border-box;
 }
 
 code {

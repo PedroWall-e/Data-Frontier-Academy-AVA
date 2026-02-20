@@ -378,6 +378,117 @@ app.post('/api/chamados/:id/mensagens', verificarToken, async (req, res) => {
     }
 });
 
+// ==========================================
+// 8. NOVAS ROTAS (VITRINE, EDIÇÃO E RELATÓRIOS)
+// ==========================================
+
+// A) Rota para o Aluno ver APENAS os cursos que comprou (Vitrine)
+app.get('/api/aluno/meus-cursos', verificarToken, async (req, res) => {
+    try {
+        const [cursos] = await db.execute(`
+            SELECT c.* FROM cursos c
+            JOIN matriculas m ON c.id = m.curso_id
+            WHERE m.aluno_id = ? AND m.status = 'ativa'
+        `, [req.usuarioLogado.id]);
+        res.json(cursos);
+    } catch (erro) {
+        res.status(500).json({ erro: "Erro ao buscar a sua vitrine de cursos." });
+    }
+});
+
+// B) Rotas para o Produtor poder APAGAR módulos e aulas
+app.delete('/api/modulos/:id', verificarToken, async (req, res) => {
+    try {
+        await db.execute('DELETE FROM modulos WHERE id = ?', [req.params.id]);
+        res.json({ mensagem: "Módulo apagado com sucesso!" });
+    } catch (erro) {
+        res.status(500).json({ erro: "Erro ao apagar módulo." });
+    }
+});
+
+app.delete('/api/aulas/:id', verificarToken, async (req, res) => {
+    try {
+        await db.execute('DELETE FROM aulas WHERE id = ?', [req.params.id]);
+        res.json({ mensagem: "Aula apagada com sucesso!" });
+    } catch (erro) {
+        res.status(500).json({ erro: "Erro ao apagar aula." });
+    }
+});
+
+// C) Rota de Relatório Completo para o Admin (Tabelas e Dinheiro)
+app.get('/api/admin/relatorio-completo', verificarToken, async (req, res) => {
+    if (req.usuarioLogado.papel !== 'admin') return res.status(403).json({ erro: "Acesso Negado." });
+    try {
+        const [usuarios] = await db.execute('SELECT id, nome, email, papel FROM usuarios ORDER BY id DESC');
+        const [cursos] = await db.execute('SELECT id, titulo, preco FROM cursos ORDER BY id DESC');
+        
+        // Junta matrículas com o preço do curso para sabermos as vendas
+        const [matriculas] = await db.execute(`
+            SELECT m.id, u.nome as aluno_nome, c.titulo as curso_titulo, c.preco, m.status, m.data_compra
+            FROM matriculas m
+            JOIN usuarios u ON m.aluno_id = u.id
+            JOIN cursos c ON m.curso_id = c.id
+            ORDER BY m.data_compra DESC
+        `);
+        
+        // Calcula o total de dinheiro ganho (Métricas de Vendas)
+        const [vendas] = await db.execute(`
+            SELECT SUM(c.preco) as receita_total 
+            FROM matriculas m 
+            JOIN cursos c ON m.curso_id = c.id 
+            WHERE m.status = 'ativa'
+        `);
+
+        res.json({
+            usuarios, 
+            cursos, 
+            matriculas,
+            receitaTotal: vendas[0].receita_total || 0
+        });
+    } catch (erro) {
+        res.status(500).json({ erro: "Erro ao gerar relatório." });
+    }
+});
+
+// ==========================================
+// ROTA DE REGISTO (Criar Conta de Aluno)
+// ==========================================
+app.post('/api/registrar', async (req, res) => {
+    const { nome, email, senha } = req.body;
+
+    try {
+        // Verifica se o e-mail já existe
+        const [existente] = await db.execute('SELECT * FROM usuarios WHERE email = ?', [email]);
+        if (existente.length > 0) {
+            return res.status(400).json({ erro: "Este e-mail já está em uso." });
+        }
+
+        // Insere o novo aluno
+        await db.execute(
+            'INSERT INTO usuarios (nome, email, senha_hash, papel) VALUES (?, ?, ?, ?)',
+            [nome, email, senha, 'aluno']
+        );
+
+        res.json({ mensagem: "Conta criada com sucesso! Faça login para continuar." });
+    } catch (erro) {
+        console.error(erro);
+        res.status(500).json({ erro: "Erro ao criar conta." });
+    }
+});
+
+// ==========================================
+// ROTA PÚBLICA DE CURSOS (Para a Página Inicial)
+// ==========================================
+app.get('/api/cursos/publicos', async (req, res) => {
+    try {
+        // Traz todos os cursos ordenados pelos mais recentes
+        const [cursos] = await db.execute('SELECT id, titulo, descricao, preco, capa_url FROM cursos ORDER BY criado_em DESC');
+        res.json(cursos);
+    } catch (erro) {
+        res.status(500).json({ erro: "Erro ao buscar cursos." });
+    }
+});
+
 const PORT = 5000;
 app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
