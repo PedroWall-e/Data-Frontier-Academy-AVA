@@ -144,7 +144,11 @@ export default function VisualizadorDeCurso() {
       <aside className="sidebar-modulos">
         <div style={{ padding: '10px', background: '#222', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '12px' }}>Os Meus Cursos</span>
-            <button onClick={fazerLogout} style={{ background: 'transparent', border: '1px solid white', color: 'white', cursor: 'pointer', fontSize: '10px', padding: '5px' }}>Sair</button>
+            <div>
+              {/* O Link para ir pedir ajuda */}
+              <a href="/suporte" style={{ color: '#00cc66', textDecoration: 'none', marginRight: '10px', fontSize: '12px' }}>Suporte</a>
+              <button onClick={fazerLogout} style={{ background: 'transparent', border: '1px solid white', color: 'white', cursor: 'pointer', fontSize: '10px', padding: '5px' }}>Sair</button>
+            </div>
         </div>
         <h2 className="titulo-curso">{curso.titulo}</h2>
         

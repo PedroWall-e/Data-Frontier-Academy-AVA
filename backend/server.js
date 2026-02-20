@@ -237,6 +237,147 @@ app.post('/api/cursos', verificarToken, async (req, res) => {
     }
 });
 
+// ==========================================
+// 6. ROTAS MASTER (ADMINISTRAÇÃO)
+// ==========================================
+
+// Rota de Estatísticas Globais
+app.get('/api/admin/estatisticas', verificarToken, async (req, res) => {
+    if (req.usuarioLogado.papel !== 'admin') {
+        return res.status(403).json({ erro: "Acesso restrito a Administradores." });
+    }
+
+    try {
+        const [totalUsuarios] = await db.execute('SELECT COUNT(*) as total FROM usuarios');
+        const [totalCursos] = await db.execute('SELECT COUNT(*) as total FROM cursos');
+        const [totalMatriculas] = await db.execute('SELECT COUNT(*) as total FROM matriculas WHERE status = "ativa"');
+        const [chamadosAbertos] = await db.execute('SELECT COUNT(*) as total FROM chamados WHERE status != "fechado"');
+
+        res.json({
+            usuarios: totalUsuarios[0].total,
+            cursos: totalCursos[0].total,
+            matriculas: totalMatriculas[0].total,
+            chamadosPendentes: chamadosAbertos[0].total
+        });
+    } catch (erro) {
+        res.status(500).json({ erro: "Erro ao carregar estatísticas." });
+    }
+});
+
+// Rota para Matricular um aluno num Curso (A nossa "Compra" manual)
+app.post('/api/admin/matricular', verificarToken, async (req, res) => {
+    // Apenas admins e produtores podem dar acesso a cursos
+    if (req.usuarioLogado.papel !== 'admin' && req.usuarioLogado.papel !== 'produtor') {
+        return res.status(403).json({ erro: "Sem permissão." });
+    }
+
+    const { aluno_id, curso_id } = req.body;
+
+    try {
+        await db.execute(
+            'INSERT INTO matriculas (aluno_id, curso_id, status) VALUES (?, ?, "ativa") ON DUPLICATE KEY UPDATE status = "ativa"',
+            [aluno_id, curso_id]
+        );
+        res.json({ mensagem: "Aluno matriculado com sucesso!" });
+    } catch (erro) {
+        res.status(500).json({ erro: "Erro ao matricular aluno." });
+    }
+});
+
+// ==========================================
+// 7. ROTAS DO SISTEMA DE SUPORTE
+// ==========================================
+
+// Listar chamados (Se for admin/suporte vê todos, se for aluno/produtor vê só os seus)
+app.get('/api/chamados', verificarToken, async (req, res) => {
+    const { id, papel } = req.usuarioLogado;
+    let query = `
+        SELECT c.*, u.nome as criador_nome 
+        FROM chamados c 
+        JOIN usuarios u ON c.usuario_id = u.id 
+        ORDER BY c.atualizado_em DESC
+    `;
+    let params = [];
+
+    // Filtro de segurança
+    if (papel === 'aluno' || papel === 'produtor') {
+        query = `
+            SELECT c.*, u.nome as criador_nome 
+            FROM chamados c 
+            JOIN usuarios u ON c.usuario_id = u.id 
+            WHERE c.usuario_id = ? 
+            ORDER BY c.atualizado_em DESC
+        `;
+        params = [id];
+    }
+
+    try {
+        const [chamados] = await db.execute(query, params);
+        res.json(chamados);
+    } catch (erro) {
+        res.status(500).json({ erro: "Erro ao buscar chamados." });
+    }
+});
+
+// Abrir um novo chamado
+app.post('/api/chamados', verificarToken, async (req, res) => {
+    const { assunto, mensagem } = req.body;
+    const usuarioId = req.usuarioLogado.id;
+
+    try {
+        // 1. Cria o ticket
+        const [resultado] = await db.execute('INSERT INTO chamados (usuario_id, assunto) VALUES (?, ?)', [usuarioId, assunto]);
+        const chamadoId = resultado.insertId;
+
+        // 2. Insere a primeira mensagem lá dentro
+        await db.execute('INSERT INTO mensagens_chamados (chamado_id, remetente_id, mensagem) VALUES (?, ?, ?)', [chamadoId, usuarioId, mensagem]);
+
+        res.json({ mensagem: "Chamado aberto com sucesso!", chamadoId });
+    } catch (erro) {
+        res.status(500).json({ erro: "Erro ao criar chamado." });
+    }
+});
+
+// Rota para ler todas as mensagens de um chamado específico (O Chat)
+app.get('/api/chamados/:id/mensagens', verificarToken, async (req, res) => {
+    const chamadoId = req.params.id;
+
+    try {
+        const [mensagens] = await db.execute(`
+            SELECT m.*, u.nome as remetente_nome, u.papel as remetente_papel 
+            FROM mensagens_chamados m
+            JOIN usuarios u ON m.remetente_id = u.id
+            WHERE m.chamado_id = ?
+            ORDER BY m.criado_em ASC
+        `, [chamadoId]);
+        
+        res.json(mensagens);
+    } catch (erro) {
+        res.status(500).json({ erro: "Erro ao carregar mensagens." });
+    }
+});
+
+// Rota para adicionar uma nova mensagem (Responder ao Ticket)
+app.post('/api/chamados/:id/mensagens', verificarToken, async (req, res) => {
+    const chamadoId = req.params.id;
+    const { mensagem } = req.body;
+    const remetenteId = req.usuarioLogado.id;
+
+    try {
+        await db.execute(
+            'INSERT INTO mensagens_chamados (chamado_id, remetente_id, mensagem) VALUES (?, ?, ?)', 
+            [chamadoId, remetenteId, mensagem]
+        );
+        
+        // Atualiza a data do chamado para que ele suba na lista de recentes
+        await db.execute('UPDATE chamados SET atualizado_em = CURRENT_TIMESTAMP WHERE id = ?', [chamadoId]);
+
+        res.json({ mensagem: "Resposta enviada!" });
+    } catch (erro) {
+        res.status(500).json({ erro: "Erro ao enviar resposta." });
+    }
+});
+
 const PORT = 5000;
 app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
