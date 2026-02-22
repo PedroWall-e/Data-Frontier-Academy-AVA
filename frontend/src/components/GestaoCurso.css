@@ -1,0 +1,126 @@
+/* GestaoCurso.css */
+.gestao-container {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.link-voltar {
+    text-decoration: none;
+    color: #0055ff;
+    font-weight: bold;
+}
+
+.construtor-card {
+    background: white;
+    padding: 30px;
+    margin-top: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    color: #333;
+    /* Contrast improvement */
+}
+
+.form-modulo {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+    margin-top: 20px;
+}
+
+.input-modulo {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    color: #333;
+}
+
+.btn-add-modulo {
+    background: #222;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-weight: bold;
+    border-radius: 4px;
+}
+
+.hr-separador {
+    border: 1px solid #eee;
+    margin-bottom: 20px;
+}
+
+.modulo-item {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+}
+
+.modulo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modulo-header h3 {
+    margin: 0;
+    color: #333;
+}
+
+.btn-add-aula {
+    background: #0055ff;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+.form-aula {
+    background: #e6f0ff;
+    padding: 15px;
+    margin-top: 15px;
+    border-radius: 5px;
+    display: flex;
+    gap: 10px;
+}
+
+.input-aula {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    color: #333;
+}
+
+.btn-salvar-aula {
+    background: #00cc66;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.btn-cancelar-aula {
+    background: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.lista-aulas-gestao {
+    margin-top: 15px;
+    padding-left: 20px;
+    color: #333;
+}
+
+.lista-aulas-gestao li {
+    padding: 8px 0;
+    border-bottom: 1px dashed #ccc;
+}

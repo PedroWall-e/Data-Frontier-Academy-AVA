@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 
 export default function PainelProdutor() {
   const [token] = useState(localStorage.getItem('token'));
-  
+
   // Estados para gerir a lista de cursos
   const [meusCursos, setMeusCursos] = useState([]);
   const [carregando, setCarregando] = useState(true);
@@ -16,7 +16,7 @@ export default function PainelProdutor() {
 
   const fazerLogout = () => {
     localStorage.removeItem('token');
-    window.location.href = "/"; 
+    window.location.href = "/";
   };
 
   // Carrega os cursos mal a página abre
@@ -29,13 +29,13 @@ export default function PainelProdutor() {
       .then(res => res.json())
       .then(dados => {
         if (!dados.erro) {
-            setMeusCursos(dados);
+          setMeusCursos(dados);
         }
         setCarregando(false);
       })
       .catch(erro => {
-          console.error(erro);
-          setCarregando(false);
+        console.error(erro);
+        setCarregando(false);
       });
   }, [token]);
 
@@ -46,14 +46,14 @@ export default function PainelProdutor() {
     try {
       const resposta = await fetch('http://localhost:5000/api/cursos', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-            titulo: novoTitulo,
-            descricao: novaDescricao,
-            preco: novoPreco || 0
+          titulo: novoTitulo,
+          descricao: novaDescricao,
+          preco: novoPreco || 0
         })
       });
 
@@ -66,12 +66,12 @@ export default function PainelProdutor() {
         setNovoDescricao('');
         setNovoPreco('');
         setMostrarFormulario(false);
-        
+
         // Dá um "refresh" local adicionando o novo curso à lista visual
         setMeusCursos([{
-            id: dados.cursoId,
-            titulo: novoTitulo,
-            preco: novoPreco || 0
+          id: dados.cursoId,
+          titulo: novoTitulo,
+          preco: novoPreco || 0
         }, ...meusCursos]);
       } else {
         alert(dados.erro);
@@ -79,6 +79,16 @@ export default function PainelProdutor() {
     } catch (erro) {
       alert("Erro de ligação ao servidor.");
     }
+  };
+
+  const clonarCurso = async (id) => {
+    if (!window.confirm("Deseja realmente duplicar este curso?")) return;
+    try {
+      const res = await api.post(`/cursos/${id}/clonar`);
+      alert(res.data.mensagem);
+      // Recarregar a lista (simplesmente forçando o useEffect ou recarregando a página)
+      window.location.reload();
+    } catch (erro) { alert("Erro ao clonar curso."); }
   };
 
   if (!token) {
@@ -94,58 +104,59 @@ export default function PainelProdutor() {
 
       <main style={{ padding: '30px', maxWidth: '1000px', margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h3>Os Meus Cursos</h3>
-            <button 
-                onClick={() => setMostrarFormulario(!mostrarFormulario)}
-                style={{ background: mostrarFormulario ? '#666' : '#0055ff', color: 'white', border: 'none', padding: '10px 20px', cursor: 'pointer', borderRadius: '4px', fontWeight: 'bold' }}
-            >
-                {mostrarFormulario ? 'Cancelar' : '+ Criar Novo Curso'}
-            </button>
+          <h3>Os Meus Cursos</h3>
+          <button
+            onClick={() => setMostrarFormulario(!mostrarFormulario)}
+            style={{ background: mostrarFormulario ? '#666' : '#0055ff', color: 'white', border: 'none', padding: '10px 20px', cursor: 'pointer', borderRadius: '4px', fontWeight: 'bold' }}
+          >
+            {mostrarFormulario ? 'Cancelar' : '+ Criar Novo Curso'}
+          </button>
         </div>
 
         {/* Formulário de Criação (Só aparece se clicar no botão) */}
         {mostrarFormulario && (
-            <div style={{ background: 'white', padding: '20px', borderRadius: '8px', marginBottom: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-                <h4>Detalhes do Novo Curso</h4>
-                <form onSubmit={criarCurso} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <input type="text" placeholder="Título do Curso" required value={novoTitulo} onChange={e => setNovoTitulo(e.target.value)} style={{ padding: '10px' }} />
-                    <textarea placeholder="Descrição (o que os alunos vão aprender?)" required value={novaDescricao} onChange={e => setNovoDescricao(e.target.value)} style={{ padding: '10px', minHeight: '80px' }} />
-                    <input type="number" step="0.01" placeholder="Preço (Ex: 49.99)" value={novoPreco} onChange={e => setNovoPreco(e.target.value)} style={{ padding: '10px' }} />
-                    <button type="submit" style={{ background: '#00cc66', color: 'white', border: 'none', padding: '10px', cursor: 'pointer', fontWeight: 'bold' }}>Guardar Curso</button>
-                </form>
-            </div>
+          <div style={{ background: 'white', padding: '20px', borderRadius: '8px', marginBottom: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+            <h4>Detalhes do Novo Curso</h4>
+            <form onSubmit={criarCurso} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <input type="text" placeholder="Título do Curso" required value={novoTitulo} onChange={e => setNovoTitulo(e.target.value)} style={{ padding: '10px' }} />
+              <textarea placeholder="Descrição (o que os alunos vão aprender?)" required value={novaDescricao} onChange={e => setNovoDescricao(e.target.value)} style={{ padding: '10px', minHeight: '80px' }} />
+              <input type="number" step="0.01" placeholder="Preço (Ex: 49.99)" value={novoPreco} onChange={e => setNovoPreco(e.target.value)} style={{ padding: '10px' }} />
+              <button type="submit" style={{ background: '#00cc66', color: 'white', border: 'none', padding: '10px', cursor: 'pointer', fontWeight: 'bold' }}>Guardar Curso</button>
+            </form>
+          </div>
         )}
 
         {/* Tabela Dinâmica com dados reais da Base de Dados */}
         {carregando ? (
-            <p>A carregar cursos...</p>
+          <p>A carregar cursos...</p>
         ) : meusCursos.length === 0 ? (
-            <p>Ainda não criou nenhum curso.</p>
+          <p>Ainda não criou nenhum curso.</p>
         ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse', background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-                <thead>
-                    <tr style={{ background: '#e0e0e0', textAlign: 'left' }}>
-                        <th style={{ padding: '15px', borderBottom: '2px solid #ddd' }}>ID</th>
-                        <th style={{ padding: '15px', borderBottom: '2px solid #ddd' }}>Título do Curso</th>
-                        <th style={{ padding: '15px', borderBottom: '2px solid #ddd' }}>Preço</th>
-                        <th style={{ padding: '15px', borderBottom: '2px solid #ddd' }}>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {meusCursos.map(curso => (
-                        <tr key={curso.id}>
-                            <td style={{ padding: '15px', borderBottom: '1px solid #eee' }}>{curso.id}</td>
-                            <td style={{ padding: '15px', borderBottom: '1px solid #eee' }}><strong>{curso.titulo}</strong></td>
-                            <td style={{ padding: '15px', borderBottom: '1px solid #eee' }}>€ {curso.preco}</td>
-                            <td style={{ padding: '15px', borderBottom: '1px solid #eee' }}>
-                                <Link to={`/admin/curso/${curso.id}`}>
-    <button style={{ marginRight: '10px', cursor: 'pointer', padding: '5px 10px', background: '#0055ff', color: 'white', border: 'none', borderRadius: '3px' }}>Gerir Conteúdo</button>
-</Link>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+          <table style={{ width: '100%', borderCollapse: 'collapse', background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+            <thead>
+              <tr style={{ background: '#e0e0e0', textAlign: 'left' }}>
+                <th style={{ padding: '15px', borderBottom: '2px solid #ddd' }}>ID</th>
+                <th style={{ padding: '15px', borderBottom: '2px solid #ddd' }}>Título do Curso</th>
+                <th style={{ padding: '15px', borderBottom: '2px solid #ddd' }}>Preço</th>
+                <th style={{ padding: '15px', borderBottom: '2px solid #ddd' }}>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {meusCursos.map(curso => (
+                <tr key={curso.id}>
+                  <td style={{ padding: '15px', borderBottom: '1px solid #eee' }}>{curso.id}</td>
+                  <td style={{ padding: '15px', borderBottom: '1px solid #eee' }}><strong>{curso.titulo}</strong></td>
+                  <td style={{ padding: '15px', borderBottom: '1px solid #eee' }}>€ {curso.preco}</td>
+                  <td style={{ padding: '15px', borderBottom: '1px solid #eee' }}>
+                    <Link to={`/admin/curso/${curso.id}`}>
+                      <button style={{ marginRight: '10px', cursor: 'pointer', padding: '5px 10px', background: '#0055ff', color: 'white', border: 'none', borderRadius: '3px' }}>Gerir Conteúdo</button>
+                    </Link>
+                    <button onClick={() => clonarCurso(curso.id)} style={{ cursor: 'pointer', padding: '5px 10px', background: '#222', color: 'white', border: 'none', borderRadius: '3px' }}>📑 Clonar</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </main>
     </div>

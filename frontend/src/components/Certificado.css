@@ -1,0 +1,116 @@
+.certificado-page {
+    background: #555;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 50px 20px;
+    font-family: 'Times New Roman', Times, serif;
+}
+
+.certificado-border {
+    background: white;
+    width: 297mm;
+    height: 210mm;
+    /* A4 Landscape */
+    padding: 2mm;
+    border: 15px solid #2c3e50;
+    position: relative;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.certificado-content {
+    border: 2px solid #2c3e50;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url('https://www.transparenttextures.com/patterns/paper.png');
+}
+
+.certificado-content h1 {
+    font-size: 50px;
+    color: #2c3e50;
+    margin: 20px 0;
+    letter-spacing: 5px;
+}
+
+.cert-intro {
+    font-size: 20px;
+    font-style: italic;
+    color: #555;
+}
+
+.cert-nome {
+    font-size: 45px;
+    color: #000;
+    margin: 20px 0;
+    text-decoration: underline;
+}
+
+.cert-curso {
+    font-size: 30px;
+    color: #00cc66;
+    margin: 20px 0;
+    font-family: 'Inter', sans-serif;
+}
+
+.cert-meta {
+    margin-top: 30px;
+}
+
+.cert-footer {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    margin-top: 60px;
+}
+
+.cert-sign,
+.cert-date {
+    display: flex;
+    flex-direction: column;
+    width: 250px;
+}
+
+.cert-sign hr {
+    border: 0;
+    border-top: 1px solid #000;
+    width: 100%;
+    margin-bottom: 5px;
+}
+
+.btn-imprimir {
+    margin-top: 30px;
+    padding: 15px 30px;
+    background: #00cc66;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+@media print {
+    .no-print {
+        display: none;
+    }
+
+    body {
+        background: white;
+        margin: 0;
+    }
+
+    .certificado-page {
+        padding: 0;
+        background: white;
+    }
+
+    .certificado-border {
+        box-shadow: none;
+        border: 15px solid #2c3e50 !important;
+    }
+}

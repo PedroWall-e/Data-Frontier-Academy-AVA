@@ -1,0 +1,224 @@
+.checkout-page {
+    background: #f4f7f6;
+    min-height: 100vh;
+    padding: 40px 20px;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.checkout-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 30px;
+}
+
+.checkout-main {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.checkout-main h2 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    font-weight: 800;
+}
+
+.planos-selection {
+    margin: 30px 0;
+}
+
+.plano-option {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border: 2px solid #eee;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.plano-option.active {
+    border-color: #00cc66;
+    background: #f0fff4;
+}
+
+.plano-option input {
+    margin-right: 15px;
+    transform: scale(1.2);
+}
+
+.plano-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.plano-titulo {
+    font-weight: bold;
+    color: #333;
+}
+
+.plano-preco {
+    color: #00cc66;
+    font-weight: 800;
+}
+
+.plano-trial {
+    font-size: 12px;
+    color: #888;
+}
+
+.coupon-section {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.coupon-section input {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+}
+
+.coupon-section button {
+    padding: 0 20px;
+    background: #333;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.msg-cupom {
+    font-size: 13px;
+    margin-top: 5px;
+}
+
+.order-bumps {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.bump-card {
+    display: flex;
+    gap: 15px;
+    padding: 15px;
+    background: #fff9db;
+    border: 2px dashed #f1c40f;
+    border-radius: 10px;
+    margin-top: 15px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.bump-card.selected {
+    background: #f0fff4;
+    border-color: #00cc66;
+}
+
+.bump-checkbox input {
+    transform: scale(1.3);
+}
+
+.bump-content strong {
+    color: #d35400;
+}
+
+.bump-content p {
+    font-size: 13px;
+    margin: 5px 0;
+    color: #666;
+}
+
+.bump-price {
+    font-weight: bold;
+    color: #27ae60;
+}
+
+.payment-simulation {
+    margin-top: 40px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.payment-mock {
+    text-align: center;
+}
+
+.card-mock {
+    padding: 15px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 8px;
+    font-weight: bold;
+    color: #555;
+}
+
+/* Sidebar */
+.summary-card {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 20px;
+}
+
+.summary-card h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    color: #555;
+}
+
+.summary-total {
+    display: flex;
+    justify-content: space-between;
+    font-size: 20px;
+    font-weight: 800;
+    margin-top: 20px;
+    color: #2c3e50;
+}
+
+.btn-finalizar {
+    width: 100%;
+    padding: 20px;
+    background: #00cc66;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    margin-top: 30px;
+    transition: background 0.2s;
+}
+
+.btn-finalizar:hover {
+    background: #00994d;
+}
+
+.garantia-msg {
+    text-align: center;
+    font-size: 12px;
+    color: #888;
+    margin-top: 15px;
+}
+
+@media (max-width: 900px) {
+    .checkout-container {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,0 +1,87 @@
+.registro-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #1a1a2e;
+}
+
+.registro-form {
+    background: #16213e;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    width: 350px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    color: white;
+}
+
+.registro-titulo {
+    text-align: center;
+    margin: 0 0 10px 0;
+    color: #0f3460;
+}
+
+.registro-titulo span {
+    color: #e94560;
+}
+
+.registro-subtitulo {
+    text-align: center;
+    margin: 0 0 20px 0;
+    color: #fff;
+}
+
+.registro-erro {
+    padding: 10px;
+    background: rgba(255, 0, 0, 0.1);
+    color: #ff4d4d;
+    border-radius: 4px;
+    font-size: 14px;
+    text-align: center;
+    border: 1px solid #ff4d4d;
+}
+
+.registro-input {
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    background: #0f3460;
+    color: white;
+    outline: none;
+}
+
+.registro-botao {
+    padding: 14px;
+    background: #e94560;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+    margin-top: 10px;
+    transition: 0.3s;
+}
+
+.registro-botao:hover {
+    background: #d83a54;
+}
+
+.registro-footer {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+.registro-footer span {
+    color: #fff;
+}
+
+.registro-link {
+    color: #e94560;
+    text-decoration: none;
+    font-weight: bold;
+}
