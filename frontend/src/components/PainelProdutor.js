@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
+import api from '../api';
 
 export default function PainelProdutor() {
   const [token] = useState(localStorage.getItem('token'));
@@ -23,14 +24,9 @@ export default function PainelProdutor() {
   useEffect(() => {
     if (!token) return;
 
-    fetch('http://localhost:5000/api/produtor/cursos', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-      .then(res => res.json())
-      .then(dados => {
-        if (!dados.erro) {
-          setMeusCursos(dados);
-        }
+    api.get('/produtor/cursos')
+      .then(res => {
+        setMeusCursos(res.data);
         setCarregando(false);
       })
       .catch(erro => {
@@ -44,22 +40,15 @@ export default function PainelProdutor() {
     e.preventDefault(); // Evita que a página recarregue
 
     try {
-      const resposta = await fetch('http://localhost:5000/api/cursos', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          titulo: novoTitulo,
-          descricao: novaDescricao,
-          preco: novoPreco || 0
-        })
+      const res = await api.post('/cursos', {
+        titulo: novoTitulo,
+        descricao: novaDescricao,
+        preco: novoPreco || 0
       });
 
-      const dados = await resposta.json();
+      const dados = res.data;
 
-      if (resposta.ok) {
+      if (res.status === 200 || res.status === 201) {
         alert("Curso criado com sucesso!");
         // Limpa o formulário e esconde-o
         setNovoTitulo('');

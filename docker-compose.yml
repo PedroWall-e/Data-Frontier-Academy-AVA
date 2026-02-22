@@ -26,6 +26,7 @@ services:
       - DB_USER=root
       - DB_PASSWORD=rootpassword
       - DB_NAME=plataforma_cursos
+      - CHAVE_SECRETA=sua_chave_secreta_aqui_123
     depends_on:
       - db
 
