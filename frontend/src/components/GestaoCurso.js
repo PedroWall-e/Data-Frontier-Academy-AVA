@@ -206,18 +206,18 @@ export default function GestaoCurso() {
 
       <div className="construtor-card">
         <div style={{ display: 'flex', borderBottom: '1px solid #ddd', marginBottom: '20px' }}>
-          <button onClick={() => setAbaAtiva('construtor')} style={{ padding: '10px 20px', background: abaAtiva === 'construtor' ? 'white' : '#eee', border: '1px solid #ddd', borderBottom: abaAtiva === 'construtor' ? 'none' : '1px solid #ddd', cursor: 'pointer', fontWeight: 'bold' }}>🔨 Construtor</button>
-          <button onClick={() => setAbaAtiva('alunos')} style={{ padding: '10px 20px', background: abaAtiva === 'alunos' ? 'white' : '#eee', border: '1px solid #ddd', borderBottom: abaAtiva === 'alunos' ? 'none' : '1px solid #ddd', cursor: 'pointer', fontWeight: 'bold' }}>👥 Alunos ({alunosMatriculados.length})</button>
-          <button onClick={() => setAbaAtiva('cupons')} style={{ padding: '10px 20px', background: abaAtiva === 'cupons' ? 'white' : '#eee', border: '1px solid #ddd', borderBottom: abaAtiva === 'cupons' ? 'none' : '1px solid #ddd', cursor: 'pointer', fontWeight: 'bold' }}>🎟️ Cupons ({cupons.length})</button>
-          <button onClick={() => setAbaAtiva('planos')} style={{ padding: '10px 20px', background: abaAtiva === 'planos' ? 'white' : '#eee', border: '1px solid #ddd', borderBottom: abaAtiva === 'planos' ? 'none' : '1px solid #ddd', cursor: 'pointer', fontWeight: 'bold' }}>🏷️ Planos ({planos.length})</button>
-          <button onClick={() => setAbaAtiva('ofertas')} style={{ padding: '10px 20px', background: abaAtiva === 'ofertas' ? 'white' : '#eee', border: '1px solid #ddd', borderBottom: abaAtiva === 'ofertas' ? 'none' : '1px solid #ddd', cursor: 'pointer', fontWeight: 'bold' }}>💰 Ofertas ({ofertas.length})</button>
-          <button onClick={() => setAbaAtiva('analytics')} style={{ padding: '10px 20px', background: abaAtiva === 'analytics' ? 'white' : '#eee', border: '1px solid #ddd', borderBottom: abaAtiva === 'analytics' ? 'none' : '1px solid #ddd', cursor: 'pointer', fontWeight: 'bold' }}>📈 Analytics</button>
-          <button onClick={() => setAbaAtiva('branding')} style={{ padding: '10px 20px', background: abaAtiva === 'branding' ? 'white' : '#eee', border: '1px solid #ddd', borderBottom: abaAtiva === 'branding' ? 'none' : '1px solid #ddd', cursor: 'pointer', fontWeight: 'bold' }}>🎨 Branding</button>
+          <button onClick={() => setAbaAtiva('construtor')} style={{ padding: '10px 20px', background: abaAtiva === 'construtor' ? 'white' : '#eee', color: '#333', border: '1px solid #ddd', borderBottom: abaAtiva === 'construtor' ? 'none' : '1px solid #ddd', cursor: 'pointer', fontWeight: 'bold' }}>🔨 Construtor</button>
+          <button onClick={() => setAbaAtiva('alunos')} style={{ padding: '10px 20px', background: abaAtiva === 'alunos' ? 'white' : '#eee', color: '#333', border: '1px solid #ddd', borderBottom: abaAtiva === 'alunos' ? 'none' : '1px solid #ddd', cursor: 'pointer', fontWeight: 'bold' }}>👥 Alunos ({alunosMatriculados.length})</button>
+          <button onClick={() => setAbaAtiva('cupons')} style={{ padding: '10px 20px', background: abaAtiva === 'cupons' ? 'white' : '#eee', color: '#333', border: '1px solid #ddd', borderBottom: abaAtiva === 'cupons' ? 'none' : '1px solid #ddd', cursor: 'pointer', fontWeight: 'bold' }}>🎟️ Cupons ({cupons.length})</button>
+          <button onClick={() => setAbaAtiva('planos')} style={{ padding: '10px 20px', background: abaAtiva === 'planos' ? 'white' : '#eee', color: '#333', border: '1px solid #ddd', borderBottom: abaAtiva === 'planos' ? 'none' : '1px solid #ddd', cursor: 'pointer', fontWeight: 'bold' }}>🏷️ Planos ({planos.length})</button>
+          <button onClick={() => setAbaAtiva('ofertas')} style={{ padding: '10px 20px', background: abaAtiva === 'ofertas' ? 'white' : '#eee', color: '#333', border: '1px solid #ddd', borderBottom: abaAtiva === 'ofertas' ? 'none' : '1px solid #ddd', cursor: 'pointer', fontWeight: 'bold' }}>💰 Ofertas ({ofertas.length})</button>
+          <button onClick={() => setAbaAtiva('analytics')} style={{ padding: '10px 20px', background: abaAtiva === 'analytics' ? 'white' : '#eee', color: '#333', border: '1px solid #ddd', borderBottom: abaAtiva === 'analytics' ? 'none' : '1px solid #ddd', cursor: 'pointer', fontWeight: 'bold' }}>📈 Analytics</button>
+          <button onClick={() => setAbaAtiva('branding')} style={{ padding: '10px 20px', background: abaAtiva === 'branding' ? 'white' : '#eee', color: '#333', border: '1px solid #ddd', borderBottom: abaAtiva === 'branding' ? 'none' : '1px solid #ddd', cursor: 'pointer', fontWeight: 'bold' }}>🎨 Branding</button>
         </div>
 
         {abaAtiva === 'construtor' ? (
           <>
-            <h2>Construtor do Curso: <span style={{ color: '#00cc66' }}>{curso.titulo}</span></h2>
+            <h2 style={{ color: '#1a1a1a' }}>Construtor do Curso: <span style={{ color: '#00cc66' }}>{curso.titulo}</span></h2>
 
             {/* Formulário para adicionar Módulo */}
             <form onSubmit={criarModulo} className="form-modulo">
@@ -231,7 +231,7 @@ export default function GestaoCurso() {
             {curso.modulos.length === 0 ? <p>Ainda não há módulos neste curso.</p> : curso.modulos.map(modulo => (
               <div key={modulo.id} className="modulo-item">
                 <div className="modulo-header">
-                  <h3>📦 {modulo.titulo}</h3>
+                  <h3 style={{ color: '#1a1a1a' }}>📦 {modulo.titulo}</h3>
                   <button onClick={() => setModuloSelecionado(modulo.id)} className="btn-add-aula">+ Adicionar Aula Aqui</button>
                 </div>
 
@@ -284,7 +284,7 @@ export default function GestaoCurso() {
         ) : abaAtiva === 'alunos' ? (
           <div className="lista-alunos-dashboard">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3>Alunos Matriculados</h3>
+              <h3 style={{ color: '#1a1a1a' }}>Alunos Matriculados</h3>
               <button onClick={matricularManual} className="btn-add-aula" style={{ width: 'auto', padding: '10px 20px' }}>+ Matricular Aluno Manualmente</button>
             </div>
             <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '15px' }}>
@@ -321,7 +321,7 @@ export default function GestaoCurso() {
           </div>
         ) : abaAtiva === 'cupons' ? (
           <div className="lista-cupons-dashboard">
-            <h3>Gerenciar Cupons de Desconto</h3>
+            <h3 style={{ color: '#1a1a1a' }}>Gerenciar Cupons de Desconto</h3>
             <form onSubmit={criarCupom} style={{ display: 'flex', gap: '10px', margin: '20px 0', padding: '15px', background: '#f9f9f9', borderRadius: '8px' }}>
               <input type="text" placeholder="Código (Ex: SEGREDO30)" required value={novoCupom.codigo} onChange={e => setNovoCupom({ ...novoCupom, codigo: e.target.value })} className="input-aula" />
               <input type="number" placeholder="% Desconto" required value={novoCupom.desconto} onChange={e => setNovoCupom({ ...novoCupom, desconto: e.target.value })} className="input-aula" style={{ width: '100px' }} />
@@ -355,7 +355,7 @@ export default function GestaoCurso() {
           </div>
         ) : abaAtiva === 'planos' ? (
           <div className="lista-planos-dashboard">
-            <h3>Gerenciar Ofertas e Planos de Venda</h3>
+            <h3 style={{ color: '#1a1a1a' }}>Gerenciar Ofertas e Planos de Venda</h3>
             <p style={{ color: '#666', fontSize: '14px' }}>Crie diferentes formas de vender o seu conteúdo (Acesso Único ou Assinatura).</p>
 
             <form onSubmit={criarPlano} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 150px', gap: '10px', margin: '20px 0', padding: '15px', background: '#f9f9f9', borderRadius: '8px' }}>
@@ -393,7 +393,7 @@ export default function GestaoCurso() {
           </div>
         ) : abaAtiva === 'ofertas' ? (
           <div className="lista-ofertas-dashboard">
-            <h3>Gerenciar Order Bumps e Upsells</h3>
+            <h3 style={{ color: '#1a1a1a' }}>Gerenciar Order Bumps e Upsells</h3>
             <p style={{ color: '#666', fontSize: '14px' }}>Configure ofertas complementares para aumentar o faturamento por cliente.</p>
 
             <form onSubmit={criarOferta} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', margin: '20px 0', padding: '15px', background: '#f9f9f9', borderRadius: '8px' }}>
@@ -436,7 +436,7 @@ export default function GestaoCurso() {
           </div>
         ) : abaAtiva === 'analytics' ? (
           <div className="analytics-dashboard">
-            <h3>📈 Performance Financeira</h3>
+            <h3 style={{ color: '#1a1a1a' }}>📈 Performance Financeira</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '40px', marginTop: '20px' }}>
               <div style={{ background: '#e0fcf0', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
                 <span style={{ fontSize: '14px', color: '#666' }}>Faturamento Total</span>
@@ -487,7 +487,7 @@ export default function GestaoCurso() {
           </div>
         ) : (
           <div className="branding-dashboard" style={{ padding: '20px', background: '#f9f9f9', borderRadius: '12px' }}>
-            <h3>Identidade Visual do Curso</h3>
+            <h3 style={{ color: '#1a1a1a' }}>Identidade Visual do Curso</h3>
             <p style={{ color: '#666', fontSize: '14px' }}>Personalize como os seus alunos verão o portal deste curso.</p>
 
             <form onSubmit={salvarBranding} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '20px' }}>

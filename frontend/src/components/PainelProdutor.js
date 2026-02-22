@@ -24,7 +24,8 @@ export default function PainelProdutor() {
   useEffect(() => {
     if (!token) return;
 
-    api.get('/produtor/cursos')
+    setCarregando(true);
+    api.get('/cursos/produtor/meus-cursos')
       .then(res => {
         setMeusCursos(res.data);
         setCarregando(false);
@@ -85,7 +86,7 @@ export default function PainelProdutor() {
   }
 
   return (
-    <div style={{ fontFamily: 'Arial, sans-serif', backgroundColor: '#f4f4f4', minHeight: '100vh' }}>
+    <div style={{ fontFamily: 'Arial, sans-serif', backgroundColor: '#f4f4f4', minHeight: '100vh', color: '#1a1a1a' }}>
       <header style={{ background: '#1a1a1a', color: 'white', padding: '15px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2>Dashboard do Produtor</h2>
         <button onClick={fazerLogout} style={{ background: '#ff4d4d', color: 'white', border: 'none', padding: '8px 15px', cursor: 'pointer', borderRadius: '4px' }}>Sair da Conta</button>
@@ -93,7 +94,7 @@ export default function PainelProdutor() {
 
       <main style={{ padding: '30px', maxWidth: '1000px', margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h3>Os Meus Cursos</h3>
+          <h3 style={{ color: '#1a1a1a' }}>Os Meus Cursos</h3>
           <button
             onClick={() => setMostrarFormulario(!mostrarFormulario)}
             style={{ background: mostrarFormulario ? '#666' : '#0055ff', color: 'white', border: 'none', padding: '10px 20px', cursor: 'pointer', borderRadius: '4px', fontWeight: 'bold' }}
@@ -105,7 +106,7 @@ export default function PainelProdutor() {
         {/* Formulário de Criação (Só aparece se clicar no botão) */}
         {mostrarFormulario && (
           <div style={{ background: 'white', padding: '20px', borderRadius: '8px', marginBottom: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-            <h4>Detalhes do Novo Curso</h4>
+            <h4 style={{ color: '#1a1a1a' }}>Detalhes do Novo Curso</h4>
             <form onSubmit={criarCurso} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <input type="text" placeholder="Título do Curso" required value={novoTitulo} onChange={e => setNovoTitulo(e.target.value)} style={{ padding: '10px' }} />
               <textarea placeholder="Descrição (o que os alunos vão aprender?)" required value={novaDescricao} onChange={e => setNovoDescricao(e.target.value)} style={{ padding: '10px', minHeight: '80px' }} />
@@ -134,7 +135,7 @@ export default function PainelProdutor() {
               {meusCursos.map(curso => (
                 <tr key={curso.id}>
                   <td style={{ padding: '15px', borderBottom: '1px solid #eee' }}>{curso.id}</td>
-                  <td style={{ padding: '15px', borderBottom: '1px solid #eee' }}><strong>{curso.titulo}</strong></td>
+                  <td style={{ padding: '15px', borderBottom: '1px solid #eee' }}><strong style={{ color: '#1a1a1a' }}>{curso.titulo}</strong></td>
                   <td style={{ padding: '15px', borderBottom: '1px solid #eee' }}>€ {curso.preco}</td>
                   <td style={{ padding: '15px', borderBottom: '1px solid #eee' }}>
                     <Link to={`/admin/curso/${curso.id}`}>

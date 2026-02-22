@@ -102,6 +102,19 @@ router.post('/progresso', verificarToken, async (req, res) => {
     }
 });
 
+// Rota para o produtor ver apenas os cursos que ELE criou
+router.get('/produtor/meus-cursos', verificarToken, async (req, res) => {
+    try {
+        const [cursos] = await db.execute(
+            'SELECT id, titulo, descricao, preco, capa_url FROM cursos WHERE produtor_id = ? ORDER BY criado_em DESC',
+            [req.usuarioLogado.id]
+        );
+        res.json(cursos);
+    } catch (erro) {
+        res.status(500).json({ erro: "Erro ao buscar seus cursos." });
+    }
+});
+
 // ==========================================
 // ROTAS DE CONSTRUÇÃO DE CURSOS (Produtor)
 // ==========================================
