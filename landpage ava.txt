@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import {
   Search,
   ShoppingCart,
@@ -15,6 +14,16 @@ import {
   Globe,
   Users
 } from 'lucide-react';
+
+// Cores da Marca baseadas no Manual de Identidade Visual (PDF) e na Landpage Oficial
+const colors = {
+  dark: '#2B2B2B',
+  blue: '#3347FF',
+  peach: '#FFE3D6',
+  rawhide: '#B2624F',
+  lightBg: '#F9F8F6',
+  white: '#FFFFFF'
+};
 
 // Componente da Logo Oficial Data Frontier
 const LogoDataFrontier = ({ className }) => (
@@ -48,74 +57,79 @@ const LogoDataFrontier = ({ className }) => (
 
 // Dados estruturados ao estilo Udemy
 const dbCursos = [
-  {
-    id: 1,
-    categoria: "Tecnologia",
-    titulo: "Bootcamp Analista de Dados e Business Intelligence 2026",
+  { 
+    id: 1, 
+    categoria: "Tecnologia", 
+    titulo: "Bootcamp Analista de Dados e Business Intelligence 2026", 
     instrutor: "Prof. Marcos Almeida",
     rating: 4.8,
     reviews: "2.314",
-    preco: "197,00",
+    preco: "197,00", 
     bestseller: true,
     icon: <MonitorPlay className="w-12 h-12 text-[#3347FF]" />,
     bg: '#F0F3FF'
   },
-  {
-    id: 2,
-    categoria: "Odontologia 3D",
-    titulo: "Impressão 3D na Odontologia Digital: Do Escaneamento à Resina",
+  { 
+    id: 2, 
+    categoria: "Odontologia 3D", 
+    titulo: "Impressão 3D na Odontologia Digital: Do Escaneamento à Resina", 
     instrutor: "Dra. Juliana Costa",
     rating: 4.9,
     reviews: "1.150",
-    preco: "349,00",
+    preco: "349,00", 
     bestseller: true,
     icon: <Microscope className="w-12 h-12 text-[#B2624F]" />,
     bg: '#FFF5F2'
   },
-  {
-    id: 3,
-    categoria: "Programação",
-    titulo: "Desenvolvimento Fullstack Master: React, Node.js e Cloud",
+  { 
+    id: 3, 
+    categoria: "Programação", 
+    titulo: "Desenvolvimento Fullstack Master: React, Node.js e Cloud", 
     instrutor: "Eng. Rafael Silva",
     rating: 4.7,
     reviews: "890",
-    preco: "120,00",
+    preco: "120,00", 
     bestseller: false,
     icon: <Code className="w-12 h-12 text-[#3347FF]" />,
     bg: '#F0F3FF'
   },
-  {
-    id: 4,
-    categoria: "Engenharia",
-    titulo: "Modelação CAD para Usinagem de Precisão e Caldeiraria",
+  { 
+    id: 4, 
+    categoria: "Engenharia", 
+    titulo: "Modelação CAD para Usinagem de Precisão e Caldeiraria", 
     instrutor: "Prof. Carlos Mendes",
     rating: 4.6,
     reviews: "420",
-    preco: "450,00",
+    preco: "450,00", 
     bestseller: false,
     icon: <Box className="w-12 h-12 text-[#2B2B2B]" />,
     bg: '#F3F3F3'
   },
-  {
-    id: 5,
-    categoria: "Odontologia 3D",
-    titulo: "Guia Cirúrgico Guiado: Planeamento em Software Livre",
+  { 
+    id: 5, 
+    categoria: "Odontologia 3D", 
+    titulo: "Guia Cirúrgico Guiado: Planeamento em Software Livre", 
     instrutor: "Dra. Juliana Costa",
     rating: 4.9,
     reviews: "3.412",
-    preco: "250,00",
+    preco: "250,00", 
     bestseller: true,
     icon: <Microscope className="w-12 h-12 text-[#B2624F]" />,
     bg: '#FFF5F2'
   },
 ];
 
-export default function LandingPage() {
-  const navigate = useNavigate();
+export default function App() {
+  const [currentPage, setCurrentPage] = useState('landing');
   const [activeTab, setActiveTab] = useState('Todos');
   const [searchQuery, setSearchQuery] = useState('');
-
+  
   const categorias = ['Todos', 'Tecnologia', 'Odontologia 3D', 'Programação', 'Engenharia'];
+
+  const navigateTo = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const cursosFiltrados = dbCursos.filter(curso => {
     const matchCat = activeTab === 'Todos' || curso.categoria === activeTab;
@@ -127,15 +141,15 @@ export default function LandingPage() {
   const Navbar = () => (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-[1400px] mx-auto px-4 h-16 flex items-center justify-between gap-4 md:gap-8">
-
+        
         {/* Esquerda: Logo + Menu */}
         <div className="flex items-center gap-4">
           <button className="md:hidden text-gray-600 hover:text-[#3347FF]">
             <Menu className="w-6 h-6" />
           </button>
-          <div
+          <div 
             className="flex items-center gap-2 cursor-pointer"
-            onClick={() => navigate('/')}
+            onClick={() => navigateTo('landing')}
           >
             <div className="w-8 h-8 rounded-lg bg-[#F9F8F6] p-1 border border-gray-100 flex-shrink-0">
               <LogoDataFrontier className="w-full h-full" />
@@ -152,7 +166,7 @@ export default function LandingPage() {
         {/* Centro: Barra de Pesquisa */}
         <div className="flex-1 max-w-3xl hidden md:flex items-center bg-[#F9F8F6] border border-black/10 rounded-full px-4 py-2 focus-within:bg-white focus-within:border-[#3347FF] focus-within:ring-2 focus-within:ring-[#3347FF]/20 transition-all">
           <Search className="w-5 h-5 text-gray-400" />
-          <input
+          <input 
             type="text"
             placeholder="Pesquisar por cursos, habilidades ou softwares..."
             className="bg-transparent border-none outline-none w-full ml-3 text-sm text-[#2B2B2B] placeholder:text-gray-500"
@@ -170,14 +184,14 @@ export default function LandingPage() {
             <ShoppingCart className="w-5 h-5" />
           </button>
           <div className="hidden sm:flex items-center gap-2">
-            <button
-              onClick={() => navigate('/login')}
+            <button 
+              onClick={() => navigateTo('login')}
               className="text-sm font-bold text-[#2B2B2B] border border-gray-300 hover:bg-gray-50 px-5 py-2 rounded-lg transition-colors"
             >
               Entrar
             </button>
-            <button
-              onClick={() => navigate('/registro')}
+            <button 
+              onClick={() => navigateTo('registro')}
               className="text-sm font-bold bg-[#2B2B2B] text-white hover:bg-black px-5 py-2 rounded-lg transition-colors"
             >
               Cadastre-se
@@ -189,6 +203,32 @@ export default function LandingPage() {
     </header>
   );
 
+  // Telas Auxiliares
+  if (currentPage !== 'landing') {
+    return (
+      <div className="min-h-screen bg-white font-sans text-[#2B2B2B] flex flex-col">
+        <Navbar />
+        <main className="flex-grow flex items-center justify-center p-4">
+          <div className="max-w-md w-full text-center items-center border border-gray-200 p-10 rounded-xl shadow-sm">
+            <h2 className="text-2xl font-bold mb-2 capitalize">
+              {currentPage === 'checkout' ? 'Carrinho / Checkout' : currentPage}
+            </h2>
+            <p className="text-gray-500 text-sm mb-6">
+              Área restrita. Conecte-se ao ecossistema Data Frontier para continuar.
+            </p>
+            <button 
+              onClick={() => navigateTo('landing')}
+              className="bg-[#3347FF] text-white font-bold py-3 px-8 rounded-lg w-full hover:bg-blue-700 transition-colors"
+            >
+              Voltar ao Início
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // TELA PRINCIPAL (LANDING PAGE SÉRIA)
   return (
     <div className="min-h-screen font-sans bg-white text-[#2B2B2B]">
       <Navbar />
@@ -197,25 +237,25 @@ export default function LandingPage() {
         {/* HERO SECTION - Foco direto no valor educacional */}
         <section className="bg-[#F9F8F6] border-b border-gray-200">
           <div className="max-w-[1400px] mx-auto px-4 py-12 md:py-20 flex flex-col md:flex-row items-center gap-12">
-
+            
             <div className="flex-1 space-y-6">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#2B2B2B] leading-tight">
-                Aprenda com quem <br />
+                Aprenda com quem <br/> 
                 <span className="text-[#3347FF]">molda a indústria.</span>
               </h1>
               <p className="text-lg text-gray-600 max-w-xl leading-relaxed">
-                Cursos práticos ministrados por especialistas ativos no mercado.
+                Cursos práticos ministrados por especialistas ativos no mercado. 
                 De Engenharia 3D à Inteligência Artificial. Avance na sua carreira hoje.
               </p>
-
+              
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                <button
+                <button 
                   onClick={() => document.getElementById('cursos').scrollIntoView({ behavior: 'smooth' })}
                   className="bg-[#2B2B2B] text-white font-bold px-6 py-3.5 rounded-lg hover:bg-black transition-colors"
                 >
                   Ver Cursos
                 </button>
-                <button
+                <button 
                   className="bg-white border border-gray-300 text-[#2B2B2B] font-bold px-6 py-3.5 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
                 >
                   <PlayCircle className="w-5 h-5 text-[#B2624F]" /> Conhecer a Metodologia
@@ -231,7 +271,7 @@ export default function LandingPage() {
                   <div className="flex justify-between items-start border-b border-gray-100 pb-6">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
-                        <Code className="w-6 h-6 text-[#3347FF]" />
+                         <Code className="w-6 h-6 text-[#3347FF]" />
                       </div>
                       <div>
                         <h4 className="font-bold text-[#2B2B2B]">Engenharia de Software</h4>
@@ -261,9 +301,9 @@ export default function LandingPage() {
           <div className="max-w-[1400px] mx-auto px-4 text-center">
             <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-6">Metodologia confiável para profissionais em +10 países</p>
             <div className="flex flex-wrap justify-center gap-8 md:gap-16 opacity-60 grayscale">
-              <div className="flex items-center gap-2 font-bold text-xl"><Globe className="w-6 h-6" /> Conexão Global</div>
-              <div className="flex items-center gap-2 font-bold text-xl"><Award className="w-6 h-6" /> Certificação Ouro</div>
-              <div className="flex items-center gap-2 font-bold text-xl"><Users className="w-6 h-6" /> Comunidade Ativa</div>
+               <div className="flex items-center gap-2 font-bold text-xl"><Globe className="w-6 h-6"/> Conexão Global</div>
+               <div className="flex items-center gap-2 font-bold text-xl"><Award className="w-6 h-6"/> Certificação Ouro</div>
+               <div className="flex items-center gap-2 font-bold text-xl"><Users className="w-6 h-6"/> Comunidade Ativa</div>
             </div>
           </div>
         </section>
@@ -281,10 +321,11 @@ export default function LandingPage() {
               <button
                 key={cat}
                 onClick={() => setActiveTab(cat)}
-                className={`whitespace-nowrap font-bold pb-2 border-b-2 transition-colors ${activeTab === cat
-                    ? 'border-[#3347FF] text-[#2B2B2B]'
-                    : 'border-transparent text-gray-500 hover:text-[#2B2B2B]'
-                  }`}
+                className={`whitespace-nowrap font-bold pb-2 border-b-2 transition-colors ${
+                  activeTab === cat 
+                  ? 'border-[#3347FF] text-[#2B2B2B]' 
+                  : 'border-transparent text-gray-500 hover:text-[#2B2B2B]'
+                }`}
               >
                 {cat}
               </button>
@@ -295,26 +336,26 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {cursosFiltrados.length > 0 ? (
               cursosFiltrados.map(curso => (
-                <div
-                  key={curso.id}
-                  className="flex flex-col cursor-pointer group hover:bg-gray-50 p-2 rounded-xl transition-colors duration-200"
-                  onClick={() => navigate(`/checkout/${curso.id}`)}
+                <div 
+                  key={curso.id} 
+                  className="flex flex-col cursor-pointer group"
+                  onClick={() => navigateTo('checkout')}
                 >
                   {/* Thumbnail Placeholder */}
-                  <div
+                  <div 
                     className="h-36 mb-3 rounded-lg flex items-center justify-center relative border border-black/5 transition-opacity group-hover:opacity-90"
                     style={{ backgroundColor: curso.bg }}
                   >
                     {curso.icon}
                   </div>
-
+                  
                   {/* Corpo do Curso */}
-                  <div className="flex flex-col flex-grow px-1">
+                  <div className="flex flex-col flex-grow">
                     <h3 className="font-bold text-[#2B2B2B] leading-tight mb-1 group-hover:text-[#3347FF] transition-colors line-clamp-2">
                       {curso.titulo}
                     </h3>
                     <p className="text-xs text-gray-500 mb-1 line-clamp-1">{curso.instrutor}</p>
-
+                    
                     {/* Rating */}
                     <div className="flex items-center gap-1.5 mb-1.5">
                       <span className="font-bold text-[#B2624F] text-sm leading-none">{curso.rating}</span>
@@ -334,7 +375,7 @@ export default function LandingPage() {
                     </div>
                     {curso.bestseller && (
                       <div className="mt-2">
-                        <span className="bg-[#FFE3D6] text-[#8a4231] text-[10px] font-bold px-2 py-1 rounded-sm uppercase tracking-wide inline-block">
+                        <span className="bg-[#FFE3D6] text-[#8a4231] text-[10px] font-bold px-2 py-1 rounded-sm uppercase tracking-wide">
                           Mais vendido
                         </span>
                       </div>
@@ -355,7 +396,7 @@ export default function LandingPage() {
           <div className="max-w-[1400px] mx-auto px-4">
             <h2 className="text-2xl font-bold text-center mb-10">Por que aprender na Data Frontier Academy?</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-
+              
               <div className="text-center p-6">
                 <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-200 shadow-sm">
                   <PlayCircle className="w-6 h-6 text-[#3347FF]" />
@@ -429,12 +470,12 @@ export default function LandingPage() {
 
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded bg-white p-1">
-                <LogoDataFrontier className="w-full h-full" />
-              </div>
-              <span className="font-extrabold text-lg text-white">
-                data frontier
-              </span>
+               <div className="w-8 h-8 rounded bg-white p-1">
+                  <LogoDataFrontier className="w-full h-full" />
+               </div>
+               <span className="font-extrabold text-lg text-white">
+                 data frontier
+               </span>
             </div>
             <p className="text-xs text-gray-400">
               © {new Date().getFullYear()} Data Frontier. Tecnologia única como você.

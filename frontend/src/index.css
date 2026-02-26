@@ -1,18 +1,23 @@
-/* Importação de uma fonte parecida com a RNS Physis caso não a tenha instalada localmente. 
-   Se tiver os ficheiros da RNS Physis (.woff ou .ttf), pode usar o @font-face aqui! */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700;900&display=swap');
 
 :root {
-  /* 👇 COLOQUE AQUI AS CORES OFICIAIS DO SEU MANUAL (Substitua os #) 👇 */
-  --cor-primaria: #3b82f6; /* Ex: O Azul da Data Frontier */
-  --cor-secundaria: #10b981; /* Ex: A cor de destaque/sucesso */
-  --cor-fundo-dark: #0f172a; 
-  --cor-fundo-card: #1e293b;
-  --cor-texto-claro: #f8fafc;
-  --cor-texto-mutado: #94a3b8;
-  
-  /* Se tiver a RNS Physis instalada, mude 'Inter' para 'RNS Physis' */
-  --fonte-oficial: 'Inter', sans-serif; 
+  --cor-primaria: #1e3a8a;
+  /* Azul Royal */
+  --cor-primaria-light: #3b82f6;
+  --cor-secundaria: #0d9488;
+  /* Teal/Turquesa */
+  --cor-fundo-dark: #f8fafc;
+  /* Not dark anymore, we follow light premium look */
+  --cor-fundo-card: #ffffff;
+  --cor-texto-claro: #0f172a;
+  /* Main text is dark now */
+  --cor-texto-mutado: #475569;
+
+  --fonte-oficial: 'Plus Jakarta Sans', 'Inter', 'Roboto', sans-serif;
 }
 
 body {
