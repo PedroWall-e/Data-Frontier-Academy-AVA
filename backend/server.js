@@ -10,9 +10,10 @@ const chamadosRoutes = require('./routes/chamados');
 const app = express();
 app.use(express.json());
 
-// Restrict CORS to frontend
+// Permissive CORS for development with multiple local origins
 app.use(cors({
-    origin: 'http://localhost:3000'
+    origin: true,
+    credentials: true
 }));
 
 // Setup routes
