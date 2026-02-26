@@ -89,7 +89,7 @@ export default function Certificado() {
                         {dados.curso}
                     </h3>
                     <p className="text-sm text-gray-400 font-medium max-w-md">
-                        Realizado na plataforma oficial da <span className="text-[#2B2B2B] font-bold">Data Frontier Academy</span>, abrangendo todos os módulos pedagógicos e avaliações práticas.
+                        Realizado na plataforma oficial da <span className="text-[#2B2B2B] font-bold">Frontier Academy by Data Frontier</span>, abrangendo todos os módulos pedagógicos e avaliações práticas.
                     </p>
                 </div>
 

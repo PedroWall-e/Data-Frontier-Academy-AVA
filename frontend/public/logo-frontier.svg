@@ -1,0 +1,8 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Minimalist Frontier Line Concept -->
+  <path d="M120 380 L256 180 L392 380" stroke="#3347FF" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M180 280 L256 280" stroke="#3347FF" stroke-width="24" stroke-linecap="round" />
+  
+  <!-- Stylized F structure within the mountain -->
+  <path d="M256 180 V380" stroke="#3347FF" stroke-width="12" stroke-dasharray="2 10" opacity="0.3" />
+</svg>

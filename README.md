@@ -1,6 +1,6 @@
-# Data Frontier Academy - AVA
+# Frontier Academy by Data Frontier - AVA
 
-Bem-vindo ao Ambiente Virtual de Aprendizagem (AVA) da **Data Frontier Academy**. Esta plataforma foi desenvolvida para oferecer uma experiência de ensino premium, moderna e altamente personalizável (White-Label).
+Bem-vindo ao Ambiente Virtual de Aprendizagem (AVA) da **Frontier Academy by Data Frontier**. Esta plataforma foi desenvolvida para oferecer uma experiência de ensino premium, moderna e altamente personalizável (White-Label).
 
 ## 🎨 Identidade Visual
 O projeto utiliza uma identidade visual exclusiva baseada no conceito **Data Frontier**, focada em:
@@ -74,4 +74,4 @@ Para testar como aluno ou produtor:
 
 ---
 
-© 2026 Data Frontier Academy. Todos os direitos reservados.
+© 2026 Frontier Academy by Data Frontier. Todos os direitos reservados.

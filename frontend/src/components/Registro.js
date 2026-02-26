@@ -32,7 +32,7 @@ export default function Registro() {
       <div className="bg-white max-w-md w-full rounded-2xl shadow-xl border border-gray-100 p-8 md:p-10">
         <div className="text-center mb-8">
           <h2 className="text-2xl font-extrabold text-[#2B2B2B]">Crie sua conta</h2>
-          <p className="text-sm text-gray-500 mt-2">Junte-se à Data Frontier Academy hoje</p>
+          <p className="text-sm text-gray-500 mt-2">Junte-se à Frontier Academy by Data Frontier hoje</p>
         </div>
 
         <form onSubmit={efetuarRegistro} className="space-y-4">

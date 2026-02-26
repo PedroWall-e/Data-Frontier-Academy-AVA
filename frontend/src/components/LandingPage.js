@@ -137,11 +137,11 @@ export default function LandingPage() {
             className="flex items-center gap-2 cursor-pointer"
             onClick={() => navigate('/')}
           >
-            <div className="w-8 h-8 rounded-lg bg-[#F9F8F6] p-1 border border-gray-100 flex-shrink-0">
-              <LogoDataFrontier className="w-full h-full" />
+            <div className="w-8 h-8 flex-shrink-0">
+              <img src="/logo-frontier.svg" alt="Frontier Academy Logo" className="w-full h-full" />
             </div>
             <span className="font-extrabold text-xl tracking-tight text-[#2B2B2B] hidden sm:block">
-              data <span className="text-[#3347FF] font-medium">academy</span>
+              frontier <span className="text-[#3347FF] font-medium">academy</span>
             </span>
           </div>
           <button className="hidden lg:block text-sm font-medium text-gray-600 hover:text-[#3347FF] ml-4">
@@ -282,8 +282,8 @@ export default function LandingPage() {
                 key={cat}
                 onClick={() => setActiveTab(cat)}
                 className={`whitespace-nowrap font-bold pb-2 border-b-2 transition-colors ${activeTab === cat
-                    ? 'border-[#3347FF] text-[#2B2B2B]'
-                    : 'border-transparent text-gray-500 hover:text-[#2B2B2B]'
+                  ? 'border-[#3347FF] text-[#2B2B2B]'
+                  : 'border-transparent text-gray-500 hover:text-[#2B2B2B]'
                   }`}
               >
                 {cat}
@@ -353,7 +353,7 @@ export default function LandingPage() {
         {/* WHY US SECTION - Abordagem Institucional */}
         <section className="bg-[#F9F8F6] py-16 border-t border-gray-200">
           <div className="max-w-[1400px] mx-auto px-4">
-            <h2 className="text-2xl font-bold text-center mb-10">Por que aprender na Data Frontier Academy?</h2>
+            <h2 className="text-2xl font-bold text-center mb-10">Por que aprender na Frontier Academy by Data Frontier?</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
 
               <div className="text-center p-6">
@@ -430,10 +430,10 @@ export default function LandingPage() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded bg-white p-1">
-                <LogoDataFrontier className="w-full h-full" />
+                <img src="/logo-frontier.svg" alt="Frontier Academy Logo" className="w-full h-full" />
               </div>
               <span className="font-extrabold text-lg text-white">
-                data frontier
+                frontier academy <span className="text-[10px] font-normal opacity-50 ml-1">by Data Frontier</span>
               </span>
             </div>
             <p className="text-xs text-gray-400">
