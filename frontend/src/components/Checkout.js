@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api';
-import './Checkout.css';
 
 export default function Checkout() {
     const { cursoId } = useParams();
@@ -87,18 +86,19 @@ export default function Checkout() {
         }
     };
 
-    if (carregando) return <div className="checkout-loading">Carregando checkout seguro...</div>;
-    if (!curso) return <div className="checkout-error">Curso não encontrado.</div>;
+    if (carregando) return <div className="min-h-screen flex items-center justify-center bg-[#F9F8F6] font-sans text-[#2B2B2B]">Carregando checkout seguro...</div>;
+    if (!curso) return <div className="min-h-screen flex items-center justify-center bg-[#F9F8F6] font-sans text-red-600 font-bold">Curso não encontrado.</div>;
 
     return (
-        <div className="checkout-page">
-            <div className="checkout-container">
-                <div className="checkout-main">
-                    <h2>Finalizar sua Inscrição</h2>
-                    <p>Você está adquirindo: <strong>{curso.titulo}</strong></p>
+        <div className="min-h-screen bg-[#F9F8F6] font-sans py-12 px-4 text-[#2B2B2B]">
+            <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-8">
+                {/* Main Content */}
+                <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
+                    <h2 className="text-2xl md:text-3xl font-extrabold mb-2">Finalizar sua Inscrição</h2>
+                    <p className="text-gray-600 mb-8">Você está adquirindo: <strong className="text-[#2B2B2B]">{curso.titulo}</strong></p>
 
                     {curso.checkout_video_url && (
-                        <div className="checkout-video" style={{ margin: '20px 0', aspectRatio: '16/9' }}>
+                        <div className="w-full aspect-video rounded-xl overflow-hidden shadow-sm mb-8 border border-gray-100">
                             <iframe
                                 width="100%"
                                 height="100%"
@@ -111,79 +111,139 @@ export default function Checkout() {
                         </div>
                     )}
 
-                    <div className="planos-selection">
-                        <h4>Escolha o seu plano:</h4>
-                        {planos.map(p => (
-                            <label key={p.id} className={`plano-option ${planoSelecionado?.id === p.id ? 'active' : ''}`}>
-                                <input type="radio" name="plano" checked={planoSelecionado?.id === p.id} onChange={() => setPlanoSelecionado(p)} />
-                                <div className="plano-info">
-                                    <span className="plano-titulo">{p.titulo}</span>
-                                    <span className="plano-preco">R$ {p.preco} {p.tipo !== 'unico' && `/${p.tipo}`}</span>
-                                    {p.trial_dias > 0 && <span className="plano-trial">{p.trial_dias} dias grátis</span>}
-                                </div>
-                            </label>
-                        ))}
+                    <div className="mb-8">
+                        <h4 className="font-bold text-lg mb-4">Escolha o seu plano</h4>
+                        <div className="space-y-3">
+                            {planos.map(p => (
+                                <label
+                                    key={p.id}
+                                    className={`block p-4 rounded-xl border-2 cursor-pointer transition-all ${planoSelecionado?.id === p.id ? 'border-[#3347FF] bg-blue-50/30' : 'border-gray-200 hover:border-blue-200'}`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <input
+                                            type="radio"
+                                            name="plano"
+                                            className="w-5 h-5 text-[#3347FF] focus:ring-[#3347FF]"
+                                            checked={planoSelecionado?.id === p.id}
+                                            onChange={() => setPlanoSelecionado(p)}
+                                        />
+                                        <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between">
+                                            <span className="font-bold text-lg">{p.titulo}</span>
+                                            <div className="text-right mt-1 sm:mt-0">
+                                                <span className="font-extrabold text-[#3347FF]">R$ {p.preco}</span>
+                                                {p.tipo !== 'unico' && <span className="text-gray-500 text-sm"> /{p.tipo}</span>}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {p.trial_dias > 0 && <div className="mt-2 ml-8 inline-block bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded-md">{p.trial_dias} dias grátis</div>}
+                                </label>
+                            ))}
+                        </div>
                     </div>
 
-                    <div className="coupon-section">
-                        <input type="text" placeholder="Tem um cupom de desconto?" value={cupom} onChange={e => setCupom(e.target.value)} />
-                        <button onClick={aplicarCupom}>Aplicar</button>
-                        {msgCupom && <p className="msg-cupom">{msgCupom}</p>}
+                    <div className="mb-8">
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                placeholder="Tem um cupom de desconto?"
+                                className="flex-1 px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3347FF]/30 transition-all font-medium text-sm"
+                                value={cupom}
+                                onChange={e => setCupom(e.target.value)}
+                            />
+                            <button
+                                className="bg-[#2B2B2B] text-white px-6 font-bold rounded-lg hover:bg-black transition-colors"
+                                onClick={aplicarCupom}
+                            >
+                                Aplicar
+                            </button>
+                        </div>
+                        {msgCupom && <p className={`mt-2 text-sm font-medium ${desconto > 0 ? 'text-green-600' : 'text-red-500'}`}>{msgCupom}</p>}
                     </div>
 
                     {orderBumps.length > 0 && (
-                        <div className="order-bumps">
-                            <h4>Ofertas Especiais para você:</h4>
-                            {orderBumps.map(b => (
-                                <div key={b.id} className={`bump-card ${bumpsSelecionados.find(bs => bs.id === b.id) ? 'selected' : ''}`} onClick={() => toggleBump(b)}>
-                                    <div className="bump-checkbox">
-                                        <input type="checkbox" checked={bumpsSelecionados.find(bs => bs.id === b.id)} readOnly />
-                                    </div>
-                                    <div className="bump-content">
-                                        <strong>{b.titulo_oferta}</strong>
-                                        <p>{b.descricao_oferta}</p>
-                                        <span className="bump-price">Por apenas + R$ {b.preco_oferta}</span>
-                                    </div>
-                                </div>
-                            ))}
+                        <div className="mb-8">
+                            <h4 className="font-bold text-lg mb-4 text-[#B2624F]">🔥 Ofertas Especiais para você</h4>
+                            <div className="space-y-4">
+                                {orderBumps.map(b => {
+                                    const isSelected = bumpsSelecionados.find(bs => bs.id === b.id);
+                                    return (
+                                        <div
+                                            key={b.id}
+                                            className={`p-4 rounded-xl border-2 border-dashed cursor-pointer transition-all flex gap-4 ${isSelected ? 'border-[#3347FF] bg-blue-50/50' : 'border-gray-300 hover:border-blue-300 bg-gray-50'}`}
+                                            onClick={() => toggleBump(b)}
+                                        >
+                                            <div className="pt-1">
+                                                <input
+                                                    type="checkbox"
+                                                    className="w-5 h-5 text-[#3347FF] rounded focus:ring-[#3347FF]"
+                                                    checked={isSelected || false}
+                                                    readOnly
+                                                />
+                                            </div>
+                                            <div>
+                                                <strong className="block text-[#2B2B2B]">{b.titulo_oferta}</strong>
+                                                <p className="text-sm text-gray-600 mt-1 mb-2">{b.descricao_oferta}</p>
+                                                <span className="inline-block bg-[#FFE3D6] text-[#B2624F] text-xs font-bold px-2 py-1 rounded">Por apenas + R$ {b.preco_oferta}</span>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
                         </div>
                     )}
 
-                    <div className="payment-simulation">
-                        <h4>Forma de Pagamento</h4>
-                        <div className="payment-mock">
-                            <div className="card-mock">💳 Cartão de Crédito (Simulação)</div>
-                            <p style={{ fontSize: '12px', color: '#888', marginTop: '10px' }}>Ambiente de teste criptografado.</p>
+                    <div className="pt-6 border-t border-gray-100">
+                        <h4 className="font-bold mb-4">Forma de Pagamento</h4>
+                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <div className="flex items-center gap-2 font-medium">💳 Cartão de Crédito (Simulação)</div>
+                            <p className="text-xs text-gray-500 mt-2">Ambiente de teste criptografado. Nenhuma cobrança real será feita.</p>
                         </div>
                     </div>
                 </div>
 
-                <div className="checkout-sidebar">
-                    <div className="summary-card">
-                        <h3>Resumo do Pedido</h3>
-                        <div className="summary-item">
-                            <span>{curso.titulo}</span>
-                            <span>R$ {planoSelecionado?.preco}</span>
-                        </div>
-                        {desconto > 0 && (
-                            <div className="summary-item discount">
-                                <span>Desconto ({desconto}%)</span>
-                                <span>- R$ {(planoSelecionado?.preco * desconto / 100).toFixed(2)}</span>
+                {/* Sidebar Summary */}
+                <div className="lg:w-[400px]">
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 sticky top-6">
+                        <h3 className="text-xl font-extrabold mb-6">Resumo do Pedido</h3>
+
+                        <div className="space-y-4 text-sm font-medium">
+                            <div className="flex justify-between items-start gap-2">
+                                <span className="text-gray-600 line-clamp-2">{curso.titulo}</span>
+                                <span className="whitespace-nowrap">R$ {planoSelecionado?.preco || '0.00'}</span>
                             </div>
-                        )}
-                        {bumpsSelecionados.map(b => (
-                            <div key={b.id} className="summary-item bump">
-                                <span>{b.curso_nome}</span>
-                                <span>R$ {b.preco_oferta}</span>
-                            </div>
-                        ))}
-                        <hr />
-                        <div className="summary-total">
-                            <span>Total</span>
-                            <span>R$ {calcularTotal()}</span>
+
+                            {desconto > 0 && (
+                                <div className="flex justify-between text-green-600">
+                                    <span>Desconto ({desconto}%)</span>
+                                    <span>- R$ {((planoSelecionado?.preco || 0) * desconto / 100).toFixed(2)}</span>
+                                </div>
+                            )}
+
+                            {bumpsSelecionados.map(b => (
+                                <div key={b.id} className="flex justify-between items-start gap-2 text-gray-600 border-t border-gray-50 pt-3">
+                                    <span className="line-clamp-2">+ {b.curso_nome}</span>
+                                    <span className="whitespace-nowrap">R$ {b.preco_oferta}</span>
+                                </div>
+                            ))}
                         </div>
-                        <button className="btn-finalizar" onClick={finalizarCompra}>GARANTIR MINHA VAGA AGORA</button>
-                        <p className="garantia-msg">🛡️ Garantia de 7 dias ou seu dinheiro de volta.</p>
+
+                        <hr className="my-6 border-gray-100" />
+
+                        <div className="flex justify-between items-center mb-6">
+                            <span className="text-xl font-bold">Total</span>
+                            <span className="text-3xl font-extrabold text-[#3347FF]">R$ {calcularTotal()}</span>
+                        </div>
+
+                        <button
+                            className="w-full bg-[#3347FF] hover:bg-blue-700 text-white font-bold text-lg py-4 rounded-xl shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-1 active:translate-y-0"
+                            onClick={finalizarCompra}
+                        >
+                            GARANTIR MINHA VAGA AGORA
+                        </button>
+
+                        <div className="mt-6 text-center text-xs font-semibold text-gray-500 flex items-center justify-center gap-1.5">
+                            🛡️ Garantia de 7 dias ou seu dinheiro de volta.
+                        </div>
                     </div>
                 </div>
             </div>

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api';
-import './Certificado.css';
 
 export default function Certificado() {
     const { cursoId } = useParams();
+    const navigate = useNavigate();
     const [dados, setDados] = useState(null);
     const [carregando, setCarregando] = useState(true);
 
@@ -39,35 +39,115 @@ export default function Certificado() {
         carregar();
     }, [cursoId]);
 
-    if (carregando) return <div style={{ textAlign: 'center', marginTop: '50px' }}>Validando conclusão e gerando certificado...</div>;
-    if (!dados) return <div style={{ textAlign: 'center', marginTop: '50px' }}>Erro ao gerar certificado.</div>;
+    if (carregando) return (
+        <div className="min-h-screen flex items-center justify-center bg-[#F9F8F6] font-sans">
+            <div className="flex flex-col items-center gap-4">
+                <div className="w-12 h-12 border-4 border-[#3347FF] border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-gray-500 font-bold">Validando conclusão e gerando certificado...</p>
+            </div>
+        </div>
+    );
+
+    if (!dados) return (
+        <div className="min-h-screen flex items-center justify-center bg-[#F9F8F6] font-sans">
+            <p className="text-red-500 font-bold text-xl">Erro ao gerar certificado.</p>
+        </div>
+    );
 
     return (
-        <div className="certificado-page">
-            <div className="certificado-border">
-                <div className="certificado-content">
-                    <img src="/logo-black.png" alt="Data Frontier" style={{ width: '150px', marginBottom: '40px' }} />
-                    <h1>CERTIFICADO DE CONCLUSÃO</h1>
-                    <p className="cert-intro">Certificamos para os devidos fins que</p>
-                    <h2 className="cert-nome">{dados.aluno}</h2>
-                    <p className="cert-intro">concluiu com êxito o treinamento</p>
-                    <h3 className="cert-curso">{dados.curso}</h3>
-                    <p className="cert-meta">Realizado na plataforma <strong>Data Frontier Academy</strong></p>
+        <div className="min-h-screen bg-gray-100 flex flex-col items-center py-12 px-4 font-sans">
+            {/* Certificado Container */}
+            <div
+                id="certificado-imprimir"
+                className="relative bg-white w-full max-w-[1000px] aspect-[1.414/1] shadow-2xl overflow-hidden border-[16px] border-[#2B2B2B] p-12 flex flex-col items-center justify-between text-center"
+            >
+                {/* Decorative border or pattern */}
+                <div className="absolute inset-0 border-[2px] border-gold-500 m-2 pointer-events-none opacity-20"></div>
 
-                    <div className="cert-footer">
-                        <div className="cert-sign">
-                            <hr />
-                            <span>{dados.instrutor}</span>
-                            <small>Diretor Pedagógico</small>
-                        </div>
-                        <div className="cert-date">
-                            <span>Emitido em: {dados.data}</span>
-                            <small>ID: {Math.random().toString(36).substr(2, 9).toUpperCase()}</small>
+                {/* Header */}
+                <div className="z-10 w-full flex flex-col items-center">
+                    <div className="mb-6">
+                        {/* Logo Simplified */}
+                        <div className="flex items-center gap-2">
+                            <span className="font-extrabold text-2xl tracking-tight text-[#2B2B2B]">
+                                data <span className="text-[#3347FF] font-medium">academy</span>
+                            </span>
                         </div>
                     </div>
+                    <h1 className="text-4xl md:text-5xl font-black text-[#2B2B2B] tracking-widest mb-2">CERTIFICADO</h1>
+                    <p className="text-[#3347FF] font-bold tracking-[0.3em] text-sm uppercase">de conclusão de treinamento</p>
                 </div>
+
+                {/* Body */}
+                <div className="z-10 flex flex-col items-center justify-center space-y-6">
+                    <p className="text-lg text-gray-500 italic">Certificamos para os devidos fins que</p>
+                    <h2 className="text-4xl md:text-5xl font-extrabold text-[#3347FF] py-2 border-b-2 border-gray-100 min-w-[300px]">
+                        {dados.aluno}
+                    </h2>
+                    <p className="text-lg text-gray-500 italic">concluiu com êxito o treinamento de alto nível</p>
+                    <h3 className="text-2xl md:text-3xl font-bold text-[#2B2B2B] leading-tight max-w-2xl">
+                        {dados.curso}
+                    </h3>
+                    <p className="text-sm text-gray-400 font-medium max-w-md">
+                        Realizado na plataforma oficial da <span className="text-[#2B2B2B] font-bold">Data Frontier Academy</span>, abrangendo todos os módulos pedagógicos e avaliações práticas.
+                    </p>
+                </div>
+
+                {/* Footer */}
+                <div className="z-10 w-full flex flex-col sm:flex-row items-end justify-between px-8">
+                    <div className="flex flex-col items-start gap-1">
+                        <div className="w-48 h-0.5 bg-gray-300 mb-2"></div>
+                        <span className="text-sm font-bold text-[#2B2B2B]">{dados.instrutor}</span>
+                        <span className="text-xs text-gray-400 uppercase tracking-wider">Diretor de Tecnologia e Ensino</span>
+                    </div>
+
+                    <div className="flex flex-col items-end gap-1 mt-6 sm:mt-0">
+                        <span className="text-sm font-bold text-gray-600">Emitido em: {dados.data}</span>
+                        <span className="text-[10px] text-gray-400 font-mono">ID: {Math.random().toString(36).substr(2, 9).toUpperCase()}</span>
+                    </div>
+                </div>
+
+                {/* Background Decoration */}
+                <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-[#3347FF] opacity-[0.03] rounded-full"></div>
+                <div className="absolute -top-20 -left-20 w-60 h-60 bg-[#B2624F] opacity-[0.03] rounded-full"></div>
             </div>
-            <button className="no-print btn-imprimir" onClick={() => window.print()}>🖨️ Imprimir / Salvar PDF</button>
+
+            {/* Actions */}
+            <div className="mt-12 flex gap-4 no-print">
+                <button
+                    onClick={() => window.print()}
+                    className="bg-[#2B2B2B] hover:bg-black text-white font-bold py-3 px-8 rounded-full shadow-lg transition-all flex items-center gap-2"
+                >
+                    <span>🖨️</span> Imprimir ou Salvar PDF
+                </button>
+                <button
+                    onClick={() => navigate('/painel')}
+                    className="bg-white border-2 border-gray-200 text-gray-600 hover:text-[#3347FF] hover:border-[#3347FF] font-bold py-3 px-8 rounded-full transition-all"
+                >
+                    Voltar para Área do Aluno
+                </button>
+            </div>
+
+            <style>{`
+                @media print {
+                    .no-print {
+                        display: none !important;
+                    }
+                    body {
+                        background: white !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                    }
+                    #certificado-imprimir {
+                        box-shadow: none !important;
+                        border-width: 10mm !important;
+                        max-width: none !important;
+                        width: 100% !important;
+                        height: 210mm !important;
+                        page-break-after: avoid;
+                    }
+                }
+            `}</style>
         </div>
     );
 }

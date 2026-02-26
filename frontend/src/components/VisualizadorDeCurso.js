@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
-import './CursoStyles.css';
-import './VisualizadorDeCurso.css';
 
 export default function VisualizadorDeCurso() {
   const [token] = useState(localStorage.getItem('token'));
@@ -20,12 +18,14 @@ export default function VisualizadorDeCurso() {
   const [novoComentario, setNovoComentario] = useState('');
   const [carregandoAula, setCarregandoAula] = useState(false);
 
+  // Open/Close state for accordions (modules)
+  const [expandedModules, setExpandedModules] = useState({});
+
   const fazerLogout = () => {
     localStorage.removeItem('token');
     window.location.href = "/login";
   };
 
-  // 1. Assim que a tela abre, busca os cursos comprados
   useEffect(() => {
     api.get('/cursos/aluno/meus-cursos')
       .then(res => {
@@ -34,13 +34,20 @@ export default function VisualizadorDeCurso() {
       });
   }, [token]);
 
-  // 2. Função quando o aluno clica na vitrine para entrar na Sala de Aula
   const entrarNaSala = (cursoId) => {
     setCarregandoAula(true);
     api.get(`/cursos/${cursoId}`)
       .then(res => {
         setCursoAtivo(res.data);
         setAulaAtual(null); // Reseta o vídeo ao trocar de curso
+
+        // Expand first module by default
+        const initialExpanded = {};
+        if (res.data.modulos && res.data.modulos.length > 0) {
+          initialExpanded[res.data.modulos[0].id] = true;
+        }
+        setExpandedModules(initialExpanded);
+
         setCarregandoAula(false);
       });
   };
@@ -70,7 +77,6 @@ export default function VisualizadorDeCurso() {
             setRespostasQuiz({});
           });
       }
-      // Buscar comentários
       api.get(`/cursos/aulas/${aulaAtual.id}/comentarios`)
         .then(res => setComentarios(res.data))
         .catch(() => setComentarios([]));
@@ -83,7 +89,6 @@ export default function VisualizadorDeCurso() {
     try {
       await api.post(`/cursos/aulas/${aulaAtual.id}/comentarios`, { texto: novoComentario });
       setNovoComentario('');
-      // Recarregar comentários
       const res = await api.get(`/cursos/aulas/${aulaAtual.id}/comentarios`);
       setComentarios(res.data);
     } catch (erro) { alert("Erro ao enviar comentário."); }
@@ -98,51 +103,66 @@ export default function VisualizadorDeCurso() {
     setQuizResultado({ acertos, total: quizPerguntas.length, percentagem: perc });
 
     if (perc >= (quizPerguntas[0]?.nota_corte || 70)) {
-      // Se aprovado, pode marcar como concluída
       if (!aulaAtual.concluida) alternarConclusaoAula();
     }
   };
 
-  if (carregandoVitrine) return <div className="vitrine-empty"><h2>A carregar a sua área de estudos...</h2></div>;
+  const toggleModule = (modId) => {
+    setExpandedModules(prev => ({ ...prev, [modId]: !prev[modId] }));
+  };
+
+  if (carregandoVitrine) return <div className="min-h-screen flex items-center justify-center bg-[#F9F8F6] font-sans text-[#2B2B2B]">Carregando área de estudos...</div>;
 
   // TELA 1: A VITRINE DE CURSOS
   if (!cursoAtivo) {
     return (
-      <div className="vitrine-container">
-        <div className="vitrine-header">
-          <h2>Meus Cursos Adquiridos</h2>
-          <div>
-            <a href="/" style={{ marginRight: '15px', color: '#00cc66', fontWeight: 'bold', textDecoration: 'none' }}>+ Descobrir novos cursos</a>
-            <button onClick={fazerLogout} className="btn-sair">Sair</button>
+      <div className="min-h-screen bg-[#F9F8F6] font-sans">
+        <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
+          <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <h2 className="text-xl font-extrabold text-[#2B2B2B]">Meus Cursos</h2>
+            <div className="flex items-center gap-6">
+              <a href="/" className="text-sm font-bold text-[#3347FF] hover:underline hidden sm:block">+ Descobrir novos cursos</a>
+              <button onClick={fazerLogout} className="text-sm font-bold text-gray-500 hover:text-red-600 transition-colors">Sair</button>
+            </div>
           </div>
-        </div>
+        </header>
 
-        {meusCursos.length === 0 ? (
-          <div className="vitrine-empty">
-            <h3>Você ainda não possui cursos.</h3>
-            <p>Adquira um curso ou peça à administração para lhe dar acesso.</p>
-          </div>
-        ) : (
-          <div className="vitrine-grid">
-            {meusCursos.map(c => (
-              <div key={c.id} className="curso-card" onClick={() => entrarNaSala(c.id)}>
-                <div className="curso-capa">
-                  {c.titulo.charAt(0)}
+        <main className="max-w-7xl mx-auto px-6 py-10">
+          {meusCursos.length === 0 ? (
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+              <div className="text-5xl mb-4">📚</div>
+              <h3 className="text-xl font-bold text-[#2B2B2B] mb-2">Você ainda não possui cursos.</h3>
+              <p className="text-gray-500 max-w-md mx-auto">Navegue pelo nosso catálogo e adquira um novo curso para começar sua jornada de aprendizado.</p>
+              <a href="/" className="inline-block mt-6 bg-[#3347FF] hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-colors">Explorar Cursos</a>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {meusCursos.map(c => (
+                <div key={c.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-md hover:border-blue-200 transition-all cursor-pointer group" onClick={() => entrarNaSala(c.id)}>
+                  <div className="h-40 bg-[#F0F3FF] flex items-center justify-center relative overflow-hidden">
+                    {c.logo_url ? (
+                      <img src={c.logo_url} alt="Capa" className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" />
+                    ) : (
+                      <span className="text-5xl font-extrabold text-[#3347FF] opacity-30 group-hover:scale-110 transition-transform">{c.titulo.charAt(0)}</span>
+                    )}
+                  </div>
+                  <div className="p-5 flex flex-col flex-1">
+                    <h3 className="font-bold text-[#2B2B2B] text-lg leading-tight mb-2 line-clamp-2">{c.titulo}</h3>
+                    <div className="mt-auto pt-4">
+                      <button className="w-full bg-[#2B2B2B] hover:bg-black text-white font-bold py-2.5 rounded-lg text-sm transition-colors">Assistir Agora</button>
+                    </div>
+                  </div>
                 </div>
-                <div className="curso-info">
-                  <h3>{c.titulo}</h3>
-                  <button className="btn-assistir">Assistir Agora</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </main>
       </div>
     );
   }
 
   // TELA 2: A SALA DE AULA
-  if (carregandoAula) return <div className="area-video"><h2>A carregar sala de aula...</h2></div>;
+  if (carregandoAula) return <div className="min-h-screen flex items-center justify-center bg-[#1C1D1F] text-white font-sans">Carregando sala de aula...</div>;
 
   let totalAulas = 0; let aulasConcluidas = 0;
   cursoAtivo.modulos.forEach(mod => {
@@ -152,167 +172,266 @@ export default function VisualizadorDeCurso() {
   const percentagem = totalAulas === 0 ? 0 : Math.round((aulasConcluidas / totalAulas) * 100);
 
   return (
-    <div className="plataforma-container" style={{
-      '--cor-primaria': cursoAtivo.cor_primaria || '#00cc66',
-      '--cor-secundaria': cursoAtivo.cor_secundaria || '#222222'
-    }}>
-      <aside className="sidebar-modulos" style={{ background: 'var(--cor-secundaria)' }}>
-        <div style={{ padding: '10px', background: 'rgba(0,0,0,0.2)', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <button onClick={() => setCursoAtivo(null)} style={{ background: 'transparent', border: '1px solid white', color: 'white', cursor: 'pointer', fontSize: '10px', padding: '5px' }}>← Voltar à Vitrine</button>
-          <div>
-            <a href="/suporte" style={{ color: 'var(--cor-primaria)', textDecoration: 'none', marginRight: '10px', fontSize: '12px' }}>Suporte</a>
-            <button onClick={fazerLogout} style={{ background: 'red', border: 'none', color: 'white', cursor: 'pointer', fontSize: '10px', padding: '5px' }}>Sair</button>
+    <div className="flex h-screen bg-[#F9F8F6] font-sans overflow-hidden">
+
+      {/* SIDEBAR */}
+      <aside className="w-80 bg-[#1C1D1F] text-white flex flex-col flex-shrink-0 border-r border-gray-800 shadow-xl z-10">
+
+        {/* Top Controls */}
+        <div className="p-4 bg-black/20 flex justify-between items-center text-xs font-semibold">
+          <button onClick={() => setCursoAtivo(null)} className="flex items-center gap-1 text-gray-400 hover:text-white transition-colors">
+            &larr; Voltar
+          </button>
+          <div className="flex items-center gap-4">
+            <a href="/suporte" className="text-gray-400 hover:text-[#3347FF] transition-colors">Suporte</a>
+            <button onClick={fazerLogout} className="text-red-400 hover:text-red-300 transition-colors">Sair</button>
           </div>
         </div>
 
-        <div style={{ textAlign: 'center', padding: '15px' }}>
-          {cursoAtivo.logo_url ? (
-            <img src={cursoAtivo.logo_url} alt="Logo" style={{ maxWidth: '100%', maxHeight: '50px' }} />
-          ) : (
-            <h2 className="titulo-curso" style={{ margin: 0 }}>{cursoAtivo.titulo}</h2>
-          )}
-        </div>
+        {/* Course Header & Progress */}
+        <div className="p-6 border-b border-gray-800">
+          <h2 className="text-lg font-bold leading-tight mb-4">{cursoAtivo.titulo}</h2>
 
-        <div style={{ padding: '0 20px 20px 20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '5px', fontWeight: 'bold' }}>
-            <span>O seu progresso:</span><span>{percentagem}%</span>
+          <div className="flex justify-between text-xs mb-2 font-bold text-gray-400">
+            <span>Progresso</span>
+            <span className={percentagem === 100 ? 'text-green-400' : 'text-[#3347FF]'}>{percentagem}%</span>
           </div>
-          <div style={{ width: '100%', height: '10px', background: 'rgba(255,255,255,0.1)', borderRadius: '5px', overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${percentagem}%`, background: percentagem === 100 ? '#ffd700' : 'var(--cor-primaria)', transition: 'width 0.5s ease' }}></div>
+          <div className="h-1.5 w-full bg-gray-800 rounded-full overflow-hidden">
+            <div
+              className={`h-full transition-all duration-500 ${percentagem === 100 ? 'bg-green-500' : 'bg-[#3347FF]'}`}
+              style={{ width: `${percentagem}%` }}
+            ></div>
           </div>
+
           {percentagem === 100 && (
             <button
               onClick={() => window.open(`/certificado/${cursoAtivo.id}`, '_blank')}
-              style={{ width: '100%', marginTop: '15px', padding: '10px', background: '#ffd700', color: '#000', border: 'none', borderRadius: '5px', fontWeight: 'bold', cursor: 'pointer' }}>
+              className="mt-4 w-full bg-yellow-500 hover:bg-yellow-400 text-black text-sm font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors">
               🏆 Emitir Certificado
             </button>
           )}
         </div>
 
-        {cursoAtivo.modulos.map((modulo, index) => (
-          <div key={modulo.id} className="modulo-group">
-            <details open={index === 0}>
-              <summary className="modulo-titulo">{modulo.titulo}</summary>
-              <ul className="lista-aulas">
-                {modulo.aulas.map((aula) => {
-                  const dataCompra = new Date(cursoAtivo.matricula.data_compra);
-                  const hoje = new Date();
-                  const diffTime = Math.abs(hoje - dataCompra);
-                  const diasPassados = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                  const bloqueadaPorDrip = aula.data_liberacao_drip > diasPassados;
+        {/* Modules List */}
+        <div className="flex-1 overflow-y-auto hide-scrollbar custom-scrollbar-dark">
+          {cursoAtivo.modulos.map((modulo) => {
+            const isOpen = expandedModules[modulo.id];
+            return (
+              <div key={modulo.id} className="border-b border-gray-800">
+                <button
+                  onClick={() => toggleModule(modulo.id)}
+                  className="w-full text-left bg-[#1C1D1F] hover:bg-white/5 p-4 flex justify-between items-center transition-colors focus:outline-none"
+                >
+                  <span className="font-bold text-sm text-gray-200 pr-4">{modulo.titulo}</span>
+                  <span className="text-gray-500 text-xs font-mono">{isOpen ? '▼' : '▶'}</span>
+                </button>
 
-                  return (
-                    <li
-                      key={aula.id}
-                      className={`${aulaAtual?.id === aula.id ? "ativa" : ""} ${bloqueadaPorDrip ? "bloqueada" : ""}`}
-                      onClick={() => !bloqueadaPorDrip && setAulaAtual(aula)}
-                      style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: bloqueadaPorDrip ? 0.5 : 1, cursor: bloqueadaPorDrip ? 'not-allowed' : 'pointer' }}
-                    >
-                      <span>{bloqueadaPorDrip ? '🔒' : (aula.concluida ? '✅' : (
-                        aula.tipo === 'video' ? '▶' :
-                          aula.tipo === 'texto' ? '📄' :
-                            aula.tipo === 'audio' ? '🔊' :
-                              aula.tipo === 'quiz' ? '❓' : '📎'
-                      ))}</span>
-                      <span style={{ fontSize: '13px' }}>
-                        {aula.titulo}
-                        {bloqueadaPorDrip && <span style={{ fontSize: '10px', display: 'block' }}>Disponível em {aula.data_liberacao_drip - diasPassados} dias</span>}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-            </details>
-          </div>
-        ))}
-      </aside>
+                {isOpen && (
+                  <div className="bg-[#151618]">
+                    <ul className="py-2">
+                      {modulo.aulas.map((aula) => {
+                        const dataCompra = new Date(cursoAtivo.matricula.data_compra);
+                        const hoje = new Date();
+                        const diffTime = Math.abs(hoje - dataCompra);
+                        const diasPassados = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                        const bloqueadaPorDrip = aula.data_liberacao_drip > diasPassados;
 
-      <main className="area-video">
-        {aulaAtual ? (
-          <div className="video-wrapper">
-            <h1>{aulaAtual.titulo}</h1>
-            {aulaAtual.tipo === 'video' && (
-              <iframe width="100%" height="500px" src={aulaAtual.conteudo} title={aulaAtual.titulo} frameBorder="0" allowFullScreen></iframe>
-            )}
+                        const isAtiva = aulaAtual?.id === aula.id;
 
-            {aulaAtual.tipo === 'texto' && (
-              <div className="artigo-conteudo" style={{ background: 'white', padding: '30px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', lineHeight: '1.6', fontSize: '18px', color: '#333' }} dangerouslySetInnerHTML={{ __html: aulaAtual.conteudo }}></div>
-            )}
+                        // Icon logic
+                        let icon = "📄";
+                        if (aula.tipo === 'video') icon = "▶";
+                        if (aula.tipo === 'audio') icon = "🔊";
+                        if (aula.tipo === 'quiz') icon = "❓";
+                        if (aula.tipo === 'anexo') icon = "📎";
 
-            {aulaAtual.tipo === 'audio' && (
-              <div style={{ background: 'white', padding: '40px', textAlign: 'center', borderRadius: '8px' }}>
-                <audio controls src={aulaAtual.conteudo} style={{ width: '100%' }}>O seu navegador não suporta o elemento de áudio.</audio>
-              </div>
-            )}
+                        if (bloqueadaPorDrip) icon = "🔒";
+                        if (aula.concluida && !bloqueadaPorDrip) icon = "✅";
 
-            {aulaAtual.tipo === 'anexo' && (
-              <div style={{ background: 'white', padding: '40px', textAlign: 'center', borderRadius: '8px' }}>
-                <p>Esta aula possui um arquivo para download.</p>
-                <a href={aulaAtual.conteudo} target="_blank" rel="noopener noreferrer" className="btn-assistir" style={{ display: 'inline-block', width: 'auto', padding: '10px 30px' }}>Baixar Material</a>
-              </div>
-            )}
-
-            {aulaAtual.tipo === 'quiz' && (
-              <div style={{ background: 'white', padding: '30px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-                <h3>Avaliação de Conhecimento</h3>
-                {quizPerguntas.length === 0 ? <p>Este quiz ainda não possui perguntas.</p> : (
-                  <>
-                    {quizPerguntas.map((p, idx) => (
-                      <div key={p.id} style={{ marginBottom: '20px', borderBottom: '1px solid #eee', paddingBottom: '15px' }}>
-                        <p><strong>{idx + 1}. {p.pergunta}</strong></p>
-                        {p.opcoes.map((op, i) => (
-                          <label key={i} style={{ display: 'block', margin: '8px 0', cursor: 'pointer' }}>
-                            <input type="radio" name={`pergunta-${p.id}`} value={op} checked={respostasQuiz[p.id] === op} onChange={() => setRespostasQuiz({ ...respostasQuiz, [p.id]: op })} /> {op}
-                          </label>
-                        ))}
-                      </div>
-                    ))}
-                    <button onClick={submeterQuiz} className="btn-assistir" style={{ width: '200px' }}>Submeter Respostas</button>
-
-                    {quizResultado && (
-                      <div style={{ marginTop: '20px', padding: '15px', background: quizResultado.percentagem >= (quizPerguntas[0]?.nota_corte || 70) ? '#d4edda' : '#f8d7da', borderRadius: '5px' }}>
-                        <strong>Resultado: {quizResultado.acertos} / {quizResultado.total} ({quizResultado.percentagem}%)</strong>
-                        <p>{quizResultado.percentagem >= (quizPerguntas[0]?.nota_corte || 70) ? '✅ Parabéns! Foste aprovado.' : '❌ Não atingiste a nota mínima. Tenta novamente.'}</p>
-                      </div>
-                    )}
-                  </>
+                        return (
+                          <li
+                            key={aula.id}
+                            className={`
+                                    flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors border-l-2 text-sm
+                                    ${bloqueadaPorDrip ? 'opacity-40 cursor-not-allowed border-transparent' : 'hover:bg-white/10'}
+                                    ${isAtiva ? 'bg-[#3347FF]/20 border-[#3347FF] text-white' : 'border-transparent text-gray-400'}
+                                `}
+                            onClick={() => !bloqueadaPorDrip && setAulaAtual(aula)}
+                          >
+                            <span className={`flex-shrink-0 mt-0.5 ${isAtiva || aula.concluida ? 'text-[#3347FF]' : 'text-gray-500'}`}>{icon}</span>
+                            <div className="flex flex-col">
+                              <span className={`font-medium leading-tight ${isAtiva ? 'text-white' : ''}`}>{aula.titulo}</span>
+                              {bloqueadaPorDrip && <span className="text-[10px] uppercase tracking-wider font-bold text-yellow-500 mt-1">Disponível em {aula.data_liberacao_drip - diasPassados} dias</span>}
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
                 )}
               </div>
-            )}
+            )
+          })}
+        </div>
+      </aside>
 
-            <div className="video-section-header">
-              <p style={{ margin: 0, fontWeight: 'bold' }}>Gostou da aula?</p>
-              <button onClick={alternarConclusaoAula} style={{ padding: '10px 20px', backgroundColor: aulaAtual.concluida ? '#fff' : 'var(--cor-primaria)', color: aulaAtual.concluida ? 'var(--cor-primaria)' : '#fff', border: `2px solid var(--cor-primaria)`, borderRadius: '25px', cursor: 'pointer', fontWeight: 'bold' }}>
-                {aulaAtual.concluida ? '✅ Aula Concluída (Desmarcar)' : 'Marcar como Concluída'}
-              </button>
+      {/* MAIN CONTENT AREA */}
+      <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+        {aulaAtual ? (
+          <div className="p-4 md:p-8 max-w-5xl mx-auto w-full">
+
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-8">
+              {/* Header Classroom */}
+              <div className="px-6 py-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h1 className="text-xl font-extrabold text-[#2B2B2B]">{aulaAtual.titulo}</h1>
+                <button
+                  onClick={alternarConclusaoAula}
+                  className={`flex-shrink-0 px-4 py-2 text-sm font-bold rounded-full transition-colors ${aulaAtual.concluida ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-[#3347FF] hover:bg-blue-700 text-white'}`}
+                >
+                  {aulaAtual.concluida ? '✅ Concluída' : 'Marcar como Concluída'}
+                </button>
+              </div>
+
+              {/* Content Player Area */}
+              <div className="bg-[#F9F8F6]">
+                {aulaAtual.tipo === 'video' && (
+                  <div className="w-full aspect-video bg-black">
+                    <iframe className="w-full h-full" src={aulaAtual.conteudo} title={aulaAtual.titulo} frameBorder="0" allowFullScreen></iframe>
+                  </div>
+                )}
+
+                {aulaAtual.tipo === 'texto' && (
+                  <div className="p-8 prose max-w-none text-[#2B2B2B] font-medium" dangerouslySetInnerHTML={{ __html: aulaAtual.conteudo }}></div>
+                )}
+
+                {aulaAtual.tipo === 'audio' && (
+                  <div className="p-12 flex justify-center items-center">
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 w-full max-w-md text-center">
+                      <div className="w-16 h-16 bg-[#F0F3FF] rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-2xl">🎧</span>
+                      </div>
+                      <h4 className="font-bold text-[#2B2B2B] mb-2">Podcast da Aula</h4>
+                      <audio controls src={aulaAtual.conteudo} className="w-full custom-audio-player">Seu navegador não suporta áudio.</audio>
+                    </div>
+                  </div>
+                )}
+
+                {aulaAtual.tipo === 'anexo' && (
+                  <div className="p-12 text-center">
+                    <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200 inline-block">
+                      <span className="text-4xl mb-4 block">📎</span>
+                      <h4 className="font-bold text-[#2B2B2B] mb-2">Material Complementar</h4>
+                      <p className="text-sm text-gray-500 mb-6">Faça o download do arquivo de suporte desta aula.</p>
+                      <a href={aulaAtual.conteudo} target="_blank" rel="noopener noreferrer" className="inline-block bg-[#2B2B2B] hover:bg-black text-white px-6 py-2.5 rounded-lg font-bold transition-colors">
+                        Baixar Arquivo
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {aulaAtual.tipo === 'quiz' && (
+                  <div className="p-8 bg-white">
+                    <h3 className="text-lg font-bold text-[#2B2B2B] mb-6 flex items-center gap-2">
+                      <span>🧠</span> Avaliação de Conhecimento
+                    </h3>
+                    {quizPerguntas.length === 0 ? <p className="text-gray-500">Este quiz não possui perguntas.</p> : (
+                      <div className="space-y-8">
+                        {quizPerguntas.map((p, idx) => (
+                          <div key={p.id} className="bg-[#F9F8F6] p-6 rounded-xl border border-gray-100">
+                            <p className="font-bold text-[#2B2B2B] mb-4 text-lg">{idx + 1}. {p.pergunta}</p>
+                            <div className="space-y-2">
+                              {p.opcoes.map((op, i) => (
+                                <label key={i} className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${respostasQuiz[p.id] === op ? 'bg-blue-50 border-[#3347FF]' : 'bg-white border-gray-200 hover:border-blue-200'}`}>
+                                  <input
+                                    type="radio"
+                                    name={`pergunta-${p.id}`}
+                                    value={op}
+                                    checked={respostasQuiz[p.id] === op}
+                                    onChange={() => setRespostasQuiz({ ...respostasQuiz, [p.id]: op })}
+                                    className="mt-1 w-4 h-4 text-[#3347FF] focus:ring-[#3347FF]"
+                                  />
+                                  <span className="text-[#2B2B2B] font-medium">{op}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+
+                        <div className="flex items-center gap-4 pt-4 border-t border-gray-100">
+                          <button onClick={submeterQuiz} className="bg-[#3347FF] hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-colors">
+                            Submeter Respostas
+                          </button>
+
+                          {quizResultado && (
+                            <div className={`px-4 py-3 rounded-lg flex-1 flex items-center gap-3 font-bold border ${quizResultado.percentagem >= (quizPerguntas[0]?.nota_corte || 70) ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'}`}>
+                              <span className="text-2xl">{quizResultado.percentagem >= (quizPerguntas[0]?.nota_corte || 70) ? '🏆' : '⚠️'}</span>
+                              <div>
+                                <div className="text-sm opacity-80 font-semibold mb-0.5">Nota: {quizResultado.acertos}/{quizResultado.total} ({quizResultado.percentagem}%)</div>
+                                <div>{quizResultado.percentagem >= (quizPerguntas[0]?.nota_corte || 70) ? 'Parabéns! Foste aprovado.' : 'Não atingiste a nota mínima. Tenta novamente.'}</div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div className="comentarios-section" style={{ marginTop: '40px', borderTop: '1px solid #ddd', paddingTop: '20px' }}>
-              <h3>💬 Dúvidas e Comentários</h3>
-              <form onSubmit={postarComentario} style={{ marginBottom: '20px' }}>
-                <textarea value={novoComentario} onChange={e => setNovoComentario(e.target.value)} placeholder="Tire sua dúvida ou deixe um comentário..." required style={{ width: '100%', padding: '15px', borderRadius: '8px', border: '1px solid #ccc', minHeight: '80px', marginBottom: '10px' }} />
-                <button type="submit" className="btn-assistir" style={{ width: '150px', backgroundColor: 'var(--cor-primaria)' }}>Enviar</button>
+            {/* Comentários Section */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8">
+              <h3 className="text-lg font-bold text-[#2B2B2B] mb-6 flex items-center gap-2">
+                <span>💬</span> Dúvidas e Discussões
+              </h3>
+
+              <form onSubmit={postarComentario} className="mb-8">
+                <textarea
+                  value={novoComentario}
+                  onChange={e => setNovoComentario(e.target.value)}
+                  placeholder="Em que podemos ajudar? Partilhe a sua dúvida com a comunidade..."
+                  required
+                  className="w-full p-4 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#3347FF]/40 focus:border-[#3347FF] resize-y min-h-[100px] mb-3 text-sm font-medium"
+                />
+                <div className="flex justify-end">
+                  <button type="submit" className="bg-[#2B2B2B] hover:bg-black text-white px-6 py-2.5 rounded-lg font-bold text-sm transition-colors">
+                    Publicar Comentário
+                  </button>
+                </div>
               </form>
 
-              <div className="lista-comentarios">
-                {comentarios.length === 0 ? <p style={{ color: '#666' }}>Seja o primeiro a comentar!</p> : comentarios.map(c => (
-                  <div key={c.id} className="comentario-item">
-                    <div className="comentario-header">
-                      <span className="comentario-autor">{c.autor}</span>
-                      <span className="comentario-data">{new Date(c.data).toLocaleString()}</span>
+              <div className="space-y-6">
+                {comentarios.length === 0 ? (
+                  <div className="text-center py-8 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                    <p className="text-gray-500 font-medium">Seja o primeiro a enviar uma dúvida ou contribuição!</p>
+                  </div>
+                ) : comentarios.map(c => (
+                  <div key={c.id} className="flex gap-4 border-b border-gray-100 pb-6 last:border-0 last:pb-0">
+                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                      <span className="font-bold text-[#3347FF] text-sm">{c.autor ? c.autor.charAt(0).toUpperCase() : 'A'}</span>
                     </div>
-                    <p className="comentario-texto">{c.texto}</p>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-bold text-[#2B2B2B] text-sm">{c.autor}</span>
+                        <span className="text-xs text-gray-400 font-medium">• {new Date(c.data).toLocaleDateString()}</span>
+                      </div>
+                      <p className="text-gray-700 text-sm whitespace-pre-wrap">{c.texto}</p>
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
+
           </div>
         ) : (
-          <div className="bem-vindo">
-            <h3>Selecione uma aula no menu lateral para começar</h3>
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center h-full">
+            <div className="w-24 h-24 bg-white rounded-full shadow-sm flex items-center justify-center mb-6 text-4xl">🎓</div>
+            <h3 className="text-2xl font-extrabold text-[#2B2B2B] mb-2">Bem-vindo à Sala de Aula</h3>
+            <p className="text-gray-500 max-w-sm">Selecione um dos módulos e aulas no painel lateral esquerdo para dar início aos seus estudos.</p>
           </div>
         )}
       </main>
+
     </div>
   );
 }
