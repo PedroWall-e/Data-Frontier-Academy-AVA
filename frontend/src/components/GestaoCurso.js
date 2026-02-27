@@ -27,7 +27,10 @@ export default function GestaoCurso() {
     cor_secundaria: '#222222',
     logo_url: '',
     subdominio: '',
-    checkout_video_url: ''
+    checkout_video_url: '',
+    descricao: '',
+    requisitos: '',
+    publico_alvo: ''
   });
   const [planos, setPlanos] = useState([]);
   const [novoPlano, setNovoPlano] = useState({ titulo: '', tipo: 'unico', preco: '', trial: 0 });
@@ -77,7 +80,10 @@ export default function GestaoCurso() {
         cor_secundaria: curso.cor_secundaria || '#2B2B2B',
         logo_url: curso.logo_url || '',
         subdominio: curso.subdominio || '',
-        checkout_video_url: curso.checkout_video_url || ''
+        checkout_video_url: curso.checkout_video_url || '',
+        descricao: curso.descricao || '',
+        requisitos: curso.requisitos || '',
+        publico_alvo: curso.publico_alvo || ''
       });
     }
   }, [curso]);
@@ -656,6 +662,31 @@ export default function GestaoCurso() {
                   <div className="border-t border-gray-200 pt-6 mt-6">
                     <label className="block text-sm font-bold text-[#2B2B2B] mb-2">URL Logotipo Personalizado Sidebar Oficial (PNG transparência recomendada)</label>
                     <input type="url" placeholder="https://seudominio.com/logo-white.png" value={branding.logo_url} onChange={e => setBranding({ ...branding, logo_url: e.target.value })} className="w-full px-4 py-3 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#3347FF]/30 font-medium" />
+                  </div>
+
+                  <div className="border-t border-gray-200 pt-6 mt-6">
+                    <h3 className="text-lg font-bold text-[#2B2B2B] mb-4">Informações da Página de Vendas</h3>
+
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-bold text-[#2B2B2B] mb-2">Descrição Completa do Curso (O que os alunos vão aprender)</label>
+                        <textarea placeholder="Detalhe os módulos, metodologias e benefícios do seu curso..." value={branding.descricao} onChange={e => setBranding({ ...branding, descricao: e.target.value })} className="w-full px-4 py-3 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#3347FF]/30 font-medium min-h-[120px] resize-y" />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-bold text-[#2B2B2B] mb-2">Público-Alvo (Para quem é este curso?)</label>
+                        <textarea placeholder="Ex: Iniciantes em programação, designers que querem aprender a codar..." value={branding.publico_alvo} onChange={e => setBranding({ ...branding, publico_alvo: e.target.value })} className="w-full px-4 py-3 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#3347FF]/30 font-medium min-h-[80px] resize-y" />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-bold text-[#2B2B2B] mb-2">Pré-requisitos (O que o aluno precisa saber antes?)</label>
+                        <textarea placeholder="Ex: Nenhum conhecimento prévio necessário, ou: Conhecimento básico em HTML/CSS..." value={branding.requisitos} onChange={e => setBranding({ ...branding, requisitos: e.target.value })} className="w-full px-4 py-3 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#3347FF]/30 font-medium min-h-[80px] resize-y" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-gray-200 pt-6 mt-6">
+                    <h3 className="text-lg font-bold text-[#2B2B2B] mb-4">Vídeo de Vendas (VSL) e Customizações Técnicas</h3>
                   </div>
 
                   <div>

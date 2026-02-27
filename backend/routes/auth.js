@@ -75,4 +75,48 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// ==========================================
+// ROTA DE PERFIL (Atualizar Dados)
+// ==========================================
+const { verificarToken } = require('../middlewares/authMiddleware');
+
+router.put('/perfil', verificarToken, async (req, res) => {
+    const { foto_url, biografia, titulo_profissional, redes_sociais } = req.body;
+    const usuarioId = req.usuario.id;
+
+    try {
+        await db.execute(
+            `UPDATE usuarios 
+             SET foto_url = ?, biografia = ?, titulo_profissional = ?, redes_sociais = ? 
+             WHERE id = ?`,
+            [foto_url || null, biografia || null, titulo_profissional || null, redes_sociais ? JSON.stringify(redes_sociais) : null, usuarioId]
+        );
+
+        res.json({ mensagem: "Perfil atualizado com sucesso!" });
+    } catch (erro) {
+        console.error(erro);
+        res.status(500).json({ erro: "Erro ao atualizar o perfil." });
+    }
+});
+
+router.get('/perfil', verificarToken, async (req, res) => {
+    const usuarioId = req.usuario.id;
+
+    try {
+        const [usuarios] = await db.execute(
+            'SELECT id, nome, email, papel, foto_url, biografia, titulo_profissional, redes_sociais FROM usuarios WHERE id = ?',
+            [usuarioId]
+        );
+
+        if (usuarios.length === 0) {
+            return res.status(404).json({ erro: "Usuário não encontrado." });
+        }
+
+        res.json(usuarios[0]);
+    } catch (erro) {
+        console.error(erro);
+        res.status(500).json({ erro: "Erro ao buscar o perfil." });
+    }
+});
+
 module.exports = router;

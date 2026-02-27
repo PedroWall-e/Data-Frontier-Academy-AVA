@@ -1,11 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Data Frontier Academy Logo">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Data Frontier Academy Favicon">
   <!-- Blue northeast-pointing arrow (top right area) -->
   <polygon fill="#3347FF" points="82,20 185,20 185,118 147,80 113,114 72,73 112,33"/>
 
   <!-- Black diagonal strip (upper center, thin bar) -->
   <polygon fill="#1C1D1F" points="60,90 100,50 128,77 88,117"/>
 
-  <!-- Black large block (lower right, L-shape going right) -->
+  <!-- Black large block (lower right) -->
   <polygon fill="#1C1D1F" points="113,114 147,80 185,118 185,185 113,185"/>
 
   <!-- Salmon/peach L-shape (lower left corner bracket) -->

@@ -97,12 +97,17 @@ export default function PainelProdutor() {
         <h2 className="font-bold text-lg flex items-center gap-2">
           <span className="text-[#3347FF] text-xl">⚙</span> Dashboard do Produtor
         </h2>
-        <button
-          onClick={fazerLogout}
-          className="text-sm font-bold bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-colors border border-transparent hover:border-white/30"
-        >
-          Sair da Conta
-        </button>
+        <div className="flex items-center gap-4">
+          <Link to="/perfil" className="text-sm font-bold bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-colors border border-transparent hover:border-white/30 hidden sm:block">
+            Meu Perfil
+          </Link>
+          <button
+            onClick={fazerLogout}
+            className="text-sm font-bold bg-[#3347FF] hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+          >
+            Sair
+          </button>
+        </div>
       </header>
 
       {/* MAIN CONTENT */}

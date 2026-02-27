@@ -9,10 +9,82 @@ const router = express.Router();
 // ==========================================
 router.get('/publicos', async (req, res) => {
     try {
-        const [cursos] = await db.execute('SELECT id, titulo, descricao, preco, capa_url FROM cursos ORDER BY criado_em DESC');
+        const [cursos] = await db.execute('SELECT id, titulo, descricao, preco, capa_url, produtor_id FROM cursos ORDER BY criado_em DESC');
+
+        // Populate author names
+        for (let curso of cursos) {
+            const [autor] = await db.execute('SELECT nome FROM usuarios WHERE id = ?', [curso.produtor_id]);
+            if (autor.length > 0) curso.instrutor = autor[0].nome;
+        }
+
         res.json(cursos);
     } catch (erro) {
         res.status(500).json({ erro: "Erro ao buscar cursos." });
+    }
+});
+
+// ==========================================
+// ROTA PÚBLICA DE DETALHES DO CURSO (Landing Page)
+// ==========================================
+router.get('/publico/:id', async (req, res) => {
+    try {
+        const [cursoInfo] = await db.execute('SELECT * FROM cursos WHERE id = ?', [req.params.id]);
+
+        if (cursoInfo.length === 0) {
+            return res.status(404).json({ erro: "Curso não encontrado." });
+        }
+
+        const curso = cursoInfo[0];
+
+        // Fetch Author Details
+        const [autor] = await db.execute(
+            'SELECT id, nome, foto_url, biografia, titulo_profissional, redes_sociais FROM usuarios WHERE id = ?',
+            [curso.produtor_id]
+        );
+        if (autor.length > 0) curso.autor = autor[0];
+
+        // Fetch Modules (without full content, just titles and lesson types for the curriculum preview)
+        const [modulos] = await db.execute('SELECT id, titulo, ordem FROM modulos WHERE curso_id = ? ORDER BY ordem ASC', [req.params.id]);
+        for (let mod of modulos) {
+            const [aulas] = await db.execute('SELECT id, titulo, tipo, ordem FROM aulas WHERE modulo_id = ? ORDER BY ordem ASC', [mod.id]);
+            mod.aulas = aulas;
+        }
+        curso.modulos = modulos;
+
+        res.json(curso);
+    } catch (erro) {
+        console.error(erro);
+        res.status(500).json({ erro: "Erro ao buscar detalhes do curso." });
+    }
+});
+
+// ==========================================
+// ROTA PÚBLICA DO AUTOR
+// ==========================================
+router.get('/autor/:usuarioId', async (req, res) => {
+    try {
+        const [autorInfo] = await db.execute(
+            'SELECT id, nome, foto_url, biografia, titulo_profissional, redes_sociais FROM usuarios WHERE id = ? AND (papel = "produtor" OR papel = "admin")',
+            [req.params.usuarioId]
+        );
+
+        if (autorInfo.length === 0) {
+            return res.status(404).json({ erro: "Autor não encontrado." });
+        }
+
+        const autor = autorInfo[0];
+
+        // Fetch Author's Courses
+        const [cursos] = await db.execute(
+            'SELECT id, titulo, descricao, preco, capa_url FROM cursos WHERE produtor_id = ? ORDER BY criado_em DESC',
+            [req.params.usuarioId]
+        );
+        autor.cursos = cursos;
+
+        res.json(autor);
+    } catch (erro) {
+        console.error(erro);
+        res.status(500).json({ erro: "Erro ao buscar detalhes do autor." });
     }
 });
 
@@ -171,7 +243,7 @@ router.post('/aulas', verificarToken, async (req, res) => {
 
 router.post('/', verificarToken, async (req, res) => {
     const produtorId = req.usuarioLogado.id;
-    const { titulo, descricao, preco } = req.body;
+    const { titulo, descricao, preco, requisitos, publico_alvo } = req.body;
 
     if (req.usuarioLogado.papel !== 'produtor' && req.usuarioLogado.papel !== 'admin') {
         return res.status(403).json({ erro: "Apenas produtores podem criar cursos." });
@@ -179,8 +251,8 @@ router.post('/', verificarToken, async (req, res) => {
 
     try {
         const [resultado] = await db.execute(
-            'INSERT INTO cursos (produtor_id, titulo, descricao, preco) VALUES (?, ?, ?, ?)',
-            [produtorId, titulo, descricao, preco || 0.00]
+            'INSERT INTO cursos (produtor_id, titulo, descricao, preco, requisitos, publico_alvo) VALUES (?, ?, ?, ?, ?, ?)',
+            [produtorId, titulo, descricao, preco || 0.00, requisitos || null, publico_alvo || null]
         );
 
         res.json({
@@ -585,11 +657,24 @@ router.put('/produtor/matricula/:id/status', verificarToken, async (req, res) =>
 
 // Atualizar configurações White-Label (Branding)
 router.put('/produtor/curso/:id/configuracoes', verificarToken, async (req, res) => {
-    const { cor_primaria, cor_secundaria, logo_url, subdominio, checkout_video_url, checkout_depoimentos } = req.body;
+    const {
+        cor_primaria, cor_secundaria, logo_url, subdominio,
+        checkout_video_url, checkout_depoimentos,
+        descricao, requisitos, publico_alvo
+    } = req.body;
     try {
         await db.execute(
-            'UPDATE cursos SET cor_primaria = ?, cor_secundaria = ?, logo_url = ?, subdominio = ?, checkout_video_url = ?, checkout_depoimentos = ? WHERE id = ?',
-            [cor_primaria, cor_secundaria, logo_url, subdominio, checkout_video_url, JSON.stringify(checkout_depoimentos), req.params.id]
+            `UPDATE cursos SET 
+                cor_primaria = ?, cor_secundaria = ?, logo_url = ?, subdominio = ?, 
+                checkout_video_url = ?, checkout_depoimentos = ?,
+                descricao = ?, requisitos = ?, publico_alvo = ?
+             WHERE id = ?`,
+            [
+                cor_primaria, cor_secundaria, logo_url, subdominio,
+                checkout_video_url, checkout_depoimentos ? JSON.stringify(checkout_depoimentos) : null,
+                descricao || null, requisitos || null, publico_alvo || null,
+                req.params.id
+            ]
         );
         res.json({ mensagem: "Configurações de branding salvas!" });
     } catch (erro) {

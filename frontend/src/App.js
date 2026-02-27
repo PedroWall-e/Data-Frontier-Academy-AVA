@@ -13,6 +13,9 @@ import PainelProdutor from './components/PainelProdutor';
 import GestaoCurso from './components/GestaoCurso';
 import PainelAdmin from './components/PainelAdmin';
 import Suporte from './components/Suporte';
+import PerfilProdutor from './components/PerfilProdutor';
+import PaginaCurso from './components/PaginaCurso';
+import PaginaAutor from './components/PaginaAutor';
 
 const theme = createTheme({
   palette: {
@@ -90,6 +93,8 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/registro" element={<Registro />} />
             <Route path="/checkout/:cursoId" element={<Checkout />} />
+            <Route path="/curso/:id" element={<PaginaCurso />} />
+            <Route path="/autor/:id" element={<PaginaAutor />} />
             <Route path="/certificado/:cursoId" element={<Certificado />} />
 
             <Route path="/painel" element={
@@ -101,6 +106,11 @@ function App() {
             <Route path="/admin" element={
               <RotaProtegida roles={['produtor', 'admin']}>
                 <PainelProdutor />
+              </RotaProtegida>
+            } />
+            <Route path="/perfil" element={
+              <RotaProtegida roles={['produtor', 'admin']}>
+                <PerfilProdutor />
               </RotaProtegida>
             } />
             <Route path="/admin/curso/:id" element={

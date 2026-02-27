@@ -11,8 +11,9 @@ async function migrate() {
             try {
                 await db.execute(sql, params);
             } catch (e) {
-                if (e.code === 'ER_DUP_FIELDNAME' || e.code === 'ER_TABLE_EXISTS_ERROR' || e.code === 'ER_DUP_ENTRY') {
-                    // Ignora se a coluna/tabela/índice já existir
+                // Ignore if column/table/index already exists
+                if (e.code === 'ER_DUP_FIELDNAME' || e.code === 'ER_TABLE_EXISTS_ERROR' || e.code === 'ER_DUP_ENTRY' || e.message.includes("Duplicate column name")) {
+                    // console.log(`Ignorando erro esperado na query: ${sql}`)
                 } else {
                     console.error(`Erro na query: ${sql}`, e.message);
                 }
@@ -36,6 +37,15 @@ async function migrate() {
 
         // NPS and Certificates
         await runQuery("CREATE TABLE IF NOT EXISTS nps_avaliacoes (id INT AUTO_INCREMENT PRIMARY KEY, curso_id INT NOT NULL, aluno_id INT NOT NULL, nota INT NOT NULL, comentario TEXT, data DATETIME DEFAULT CURRENT_TIMESTAMP)");
+
+        // Phase 6: Author Profiles and Course Landing Pages
+        await runQuery("ALTER TABLE usuarios ADD COLUMN foto_url VARCHAR(255)");
+        await runQuery("ALTER TABLE usuarios ADD COLUMN biografia TEXT");
+        await runQuery("ALTER TABLE usuarios ADD COLUMN titulo_profissional VARCHAR(150)");
+        await runQuery("ALTER TABLE usuarios ADD COLUMN redes_sociais JSON");
+
+        await runQuery("ALTER TABLE cursos ADD COLUMN requisitos TEXT");
+        await runQuery("ALTER TABLE cursos ADD COLUMN publico_alvo TEXT");
 
         // Admin User (Force reset/create)
         const salt = await bcrypt.genSalt(10);

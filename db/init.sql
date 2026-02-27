@@ -7,6 +7,11 @@ CREATE TABLE IF NOT EXISTS usuarios (
     email VARCHAR(100) NOT NULL UNIQUE,
     senha_hash VARCHAR(255) NOT NULL,
     papel ENUM('aluno', 'produtor', 'admin') DEFAULT 'aluno',
+    -- Author Profile
+    foto_url VARCHAR(255),
+    biografia TEXT,
+    titulo_profissional VARCHAR(150),
+    redes_sociais JSON,
     criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -17,6 +22,9 @@ CREATE TABLE IF NOT EXISTS cursos (
     descricao TEXT,
     preco DECIMAL(10, 2) DEFAULT 0.00,
     capa_url VARCHAR(255),
+    -- Course Landing Page Details
+    requisitos TEXT,
+    publico_alvo TEXT,
     -- Branding & White-Label
     cor_primaria VARCHAR(7) DEFAULT '#00cc66',
     cor_secundaria VARCHAR(7) DEFAULT '#222222',

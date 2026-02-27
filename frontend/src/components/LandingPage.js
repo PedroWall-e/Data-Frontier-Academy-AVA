@@ -114,10 +114,52 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('Todos');
   const [searchQuery, setSearchQuery] = useState('');
+  const [cursos, setCursos] = useState([]);
+  const [carregando, setCarregando] = useState(true);
+
+  // Mapeamento de categorias e ícones padrão caso venham vazios do backend (já que a nossa BD base não tem categoria estrita)
+  const mapCategoriaEIcone = (titulo) => {
+    const t = titulo.toLowerCase();
+    if (t.includes('dados') || t.includes('software') || t.includes('react') || t.includes('node'))
+      return { cat: 'Programação', icon: <Code className="w-12 h-12 text-[#3347FF]" />, bg: '#F0F3FF' };
+    if (t.includes('odontologia') || t.includes('cirúrgico') || t.includes('resina'))
+      return { cat: 'Odontologia 3D', icon: <Microscope className="w-12 h-12 text-[#B2624F]" />, bg: '#FFF5F2' };
+    if (t.includes('cad') || t.includes('usinagem') || t.includes('modelação'))
+      return { cat: 'Engenharia', icon: <Box className="w-12 h-12 text-[#2B2B2B]" />, bg: '#F3F3F3' };
+
+    return { cat: 'Tecnologia', icon: <MonitorPlay className="w-12 h-12 text-[#3347FF]" />, bg: '#F0F3FF' };
+  };
+
+  React.useEffect(() => {
+    // Busca cursos do backend (rota pública)
+    fetch('http://localhost:5000/api/cursos/publicos')
+      .then(res => res.json())
+      .then(data => {
+        // Enriquecer dados backend com algumas props visuais para manter o design
+        const cursosEnriquecidos = data.map(c => {
+          const visual = mapCategoriaEIcone(c.titulo);
+          return {
+            ...c,
+            categoria: visual.cat,
+            icon: visual.icon,
+            bg: visual.bg,
+            rating: (Math.random() * (5.0 - 4.5) + 4.5).toFixed(1), // Mock rating
+            reviews: Math.floor(Math.random() * 2000) + 100, // Mock reviews
+            bestseller: Math.random() > 0.6
+          };
+        });
+        setCursos(cursosEnriquecidos);
+        setCarregando(false);
+      })
+      .catch(err => {
+        console.error("Erro ao buscar cursos:", err);
+        setCarregando(false);
+      });
+  }, []);
 
   const categorias = ['Todos', 'Tecnologia', 'Odontologia 3D', 'Programação', 'Engenharia'];
 
-  const cursosFiltrados = dbCursos.filter(curso => {
+  const cursosFiltrados = cursos.filter(curso => {
     const matchCat = activeTab === 'Todos' || curso.categoria === activeTab;
     const matchSearch = curso.titulo.toLowerCase().includes(searchQuery.toLowerCase());
     return matchCat && matchSearch;
@@ -298,7 +340,7 @@ export default function LandingPage() {
                 <div
                   key={curso.id}
                   className="flex flex-col cursor-pointer group hover:bg-gray-50 p-2 rounded-xl transition-colors duration-200"
-                  onClick={() => navigate(`/checkout/${curso.id}`)}
+                  onClick={() => navigate(`/curso/${curso.id}`)}
                 >
                   {/* Thumbnail Placeholder */}
                   <div
