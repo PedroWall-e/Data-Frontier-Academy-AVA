@@ -15,6 +15,9 @@ export default function PainelProdutor() {
   const [novoTitulo, setNovoTitulo] = useState('');
   const [novaDescricao, setNovoDescricao] = useState('');
   const [novoPreco, setNovoPreco] = useState('');
+  const [novoEscopo, setNovoEscopo] = useState('LIVRE');
+  const [novaCapa, setNovaCapa] = useState('');
+  const [uploadandoCapa, setUploadandoCapa] = useState(false);
 
   const fazerLogout = () => {
     localStorage.removeItem('token');
@@ -45,7 +48,9 @@ export default function PainelProdutor() {
       const res = await api.post('/cursos', {
         titulo: novoTitulo,
         descricao: novaDescricao,
-        preco: novoPreco || 0
+        preco: novoPreco || 0,
+        escopo: novoEscopo,
+        capa_url: novaCapa
       });
 
       const dados = res.data;
@@ -55,6 +60,8 @@ export default function PainelProdutor() {
         setNovoTitulo('');
         setNovoDescricao('');
         setNovoPreco('');
+        setNovoEscopo('LIVRE');
+        setNovaCapa('');
         setMostrarFormulario(false);
 
         setMeusCursos([{
@@ -77,6 +84,34 @@ export default function PainelProdutor() {
       alert(res.data.mensagem);
       window.location.reload();
     } catch (erro) { alert("Erro ao clonar curso."); }
+  };
+
+  // Upload de imagem da capa
+  const uploadCapa = async (file) => {
+    if (!file) return;
+    setUploadandoCapa(true);
+    try {
+      const formData = new FormData();
+      formData.append('arquivo', file);
+      const res = await api.post('/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setNovaCapa(res.data.url);
+    } catch (err) {
+      alert('Erro ao fazer upload da imagem. Tente novamente.');
+    } finally {
+      setUploadandoCapa(false);
+    }
+  };
+
+  const excluirCurso = async (id) => {
+    if (!window.confirm('Tem certeza absoluta que deseja EXCLUIR este curso? Esta acção não pode ser desfeita e todos os dados relacionados serão perdidos.')) return;
+    try {
+      const res = await api.delete(`/cursos/${id}`);
+      alert(res.data.mensagem || 'Curso excluído com sucesso!');
+      setMeusCursos(meusCursos.filter(c => c.id !== id));
+    } catch (erro) {
+      alert('Erro ao excluir o curso.');
+      console.error(erro);
+    }
   };
 
   if (!token) {
@@ -146,8 +181,38 @@ export default function PainelProdutor() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-[#2B2B2B] mb-1">Preço Base (€)</label>
+                <label className="block text-sm font-bold text-[#2B2B2B] mb-1">Preço Base (R$)</label>
                 <input type="number" step="0.01" placeholder="Ex: 49.99" value={novoPreco} onChange={e => setNovoPreco(e.target.value)} className="w-full sm:w-1/3 px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3347FF]/30 transition-all font-medium" />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-[#2B2B2B] mb-1">Hub/Ecossistema</label>
+                <select value={novoEscopo} onChange={e => setNovoEscopo(e.target.value)} id="escopo_select" className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3347FF]/30 transition-all font-bold text-[#3347FF]">
+                  <option value="LIVRE">Cursos Livres (Padrão)</option>
+                  <option value="TECNICO">Cursos Técnicos</option>
+                  <option value="POS">Pós-Graduação</option>
+                  <option value="UNIVERSIDADE">Universidade Coorporativa</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-[#2B2B2B] mb-1">Capa do Curso (Imagem)</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={e => uploadCapa(e.target.files[0])}
+                  className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-blue-50 file:text-[#3347FF] hover:file:bg-blue-100 cursor-pointer"
+                />
+                {uploadandoCapa && <p className="text-xs text-blue-500 mt-1 font-medium">A fazer upload...</p>}
+                {novaCapa && (
+                  <div className="mt-3 flex items-center gap-3">
+                    <img src={novaCapa} alt="Preview da capa" className="w-24 h-16 object-cover rounded-lg border border-gray-200" />
+                    <div>
+                      <p className="text-xs font-bold text-green-600">✅ Upload concluído com sucesso!</p>
+                      <button type="button" onClick={() => setNovaCapa('')} className="text-xs text-red-500 font-medium hover:underline mt-1">× Remover</button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="pt-2">

@@ -3,41 +3,33 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api';
 
 export default function Certificado() {
-    const { cursoId } = useParams();
+    const { codigo } = useParams();
     const navigate = useNavigate();
     const [dados, setDados] = useState(null);
     const [carregando, setCarregando] = useState(true);
 
     useEffect(() => {
-        const carregar = async () => {
+        const validar = async () => {
             try {
-                // Verificar se o aluno realmente concluiu antes de mostrar
-                const res = await api.get(`/cursos/${cursoId}`);
-                const curso = res.data;
-
-                const totalAulas = curso.modulos.reduce((acc, mod) => acc + mod.aulas.length, 0);
-                const aulasConcluidas = curso.modulos.reduce((acc, mod) => acc + mod.aulas.filter(a => a.concluida).length, 0);
-
-                if (aulasConcluidas < totalAulas && totalAulas > 0) {
-                    alert("Você ainda não concluiu todas as aulas deste curso!");
-                    window.close();
-                    return;
+                const res = await api.get(`/certificados/validar/${codigo}`);
+                if (res.data.valido) {
+                    setDados({
+                        aluno: res.data.dados.aluno_nome,
+                        curso: res.data.dados.curso_nome,
+                        data: new Date(res.data.dados.data_emissao).toLocaleDateString(),
+                        instrutor: 'Equipe Data Frontier',
+                        codigo: res.data.dados.codigo_validacao,
+                        carga: res.data.dados.carga_horaria || 0
+                    });
                 }
-
-                setDados({
-                    aluno: localStorage.getItem('usuarioNome') || 'Estudante',
-                    curso: curso.titulo,
-                    data: new Date().toLocaleDateString(),
-                    instrutor: 'Equipe Data Frontier'
-                });
                 setCarregando(false);
             } catch (e) {
                 console.error(e);
                 setCarregando(false);
             }
         };
-        carregar();
-    }, [cursoId]);
+        validar();
+    }, [codigo]);
 
     if (carregando) return (
         <div className="min-h-screen flex items-center justify-center bg-[#F9F8F6] font-sans">
@@ -103,7 +95,8 @@ export default function Certificado() {
 
                     <div className="flex flex-col items-end gap-1 mt-6 sm:mt-0">
                         <span className="text-sm font-bold text-gray-600">Emitido em: {dados.data}</span>
-                        <span className="text-[10px] text-gray-400 font-mono">ID: {Math.random().toString(36).substr(2, 9).toUpperCase()}</span>
+                        <span className="text-[10px] text-gray-400 font-mono">ID VALIDAÇÃO: {dados.codigo}</span>
+                        {dados.carga > 0 && <span className="text-[10px] text-gray-400 font-mono">CARGA HORÁRIA: {dados.carga}H</span>}
                     </div>
                 </div>
 

@@ -14,6 +14,13 @@ export default function VisualizadorDeCurso() {
   const [quizPerguntas, setQuizPerguntas] = useState([]);
   const [respostasQuiz, setRespostasQuiz] = useState({});
   const [quizResultado, setQuizResultado] = useState(null);
+
+  // Estados para Entrega de Tarefa
+  const [tarefaArquivo, setTarefaArquivo] = useState(null);
+  const [tarefaLink, setTarefaLink] = useState('');
+  const [tarefaObs, setTarefaObs] = useState('');
+  const [enviandoTarefa, setEnviandoTarefa] = useState(false);
+  const [tarefaEnviada, setTarefaEnviada] = useState(false);
   const [comentarios, setComentarios] = useState([]);
   const [novoComentario, setNovoComentario] = useState('');
   const [carregandoAula, setCarregandoAula] = useState(false);
@@ -72,9 +79,20 @@ export default function VisualizadorDeCurso() {
       if (aulaAtual.tipo === 'quiz') {
         api.get(`/cursos/aulas/${aulaAtual.id}/quiz`)
           .then(res => {
-            setQuizPerguntas(res.data.map(p => ({ ...p, opcoes: JSON.parse(p.opcoes) })));
+            const listaPerguntas = res.data.perguntas.map(p => ({
+              ...p,
+              opcoes: typeof p.opcoes === 'string' ? JSON.parse(p.opcoes) : p.opcoes
+            }));
+            setQuizPerguntas(listaPerguntas);
+
+            // Mapear respostas já dadas
+            const mapaRespostas = {};
+            res.data.respostas.forEach(r => {
+              mapaRespostas[r.questao_id] = r.acertou;
+            });
+            // Opcional: Podemos guardar a escolha real se tivéssemos salvo, 
+            // mas aqui sabemos apenas se acertou. Por simplicidade local:
             setQuizResultado(null);
-            setRespostasQuiz({});
           });
       }
       api.get(`/cursos/aulas/${aulaAtual.id}/comentarios`)
@@ -94,16 +112,50 @@ export default function VisualizadorDeCurso() {
     } catch (erro) { alert("Erro ao enviar comentário."); }
   };
 
-  const submeterQuiz = () => {
-    let acertos = 0;
-    quizPerguntas.forEach(p => {
-      if (respostasQuiz[p.id] === p.resposta_correta) acertos++;
-    });
-    const perc = Math.round((acertos / quizPerguntas.length) * 100);
-    setQuizResultado({ acertos, total: quizPerguntas.length, percentagem: perc });
+  const responderQuestao = async (questaoId, indexOpcao) => {
+    setRespostasQuiz({ ...respostasQuiz, [questaoId]: indexOpcao });
+    try {
+      await api.post('/cursos/aulas/quiz/responder', {
+        questao_id: questaoId,
+        resposta_escolhida: indexOpcao
+      });
+    } catch (erro) { console.error(erro); }
+  };
 
-    if (perc >= (quizPerguntas[0]?.nota_corte || 70)) {
+  const submeterQuiz = () => {
+    alert("Respostas enviadas com sucesso!");
+    if (!aulaAtual.concluida) alternarConclusaoAula();
+  };
+
+  const emitirCertificado = async () => {
+    try {
+      const res = await api.post('/certificados/emitir', { curso_id: cursoAtivo.id });
+      window.open(`/certificado/${res.data.codigo}`, '_blank');
+    } catch (erro) {
+      alert(erro.response?.data?.erro || "Erro ao emitir certificado.");
+    }
+  };
+
+  const enviarTarefa = async (e) => {
+    e.preventDefault();
+    setEnviandoTarefa(true);
+    const formData = new FormData();
+    formData.append('aula_id', aulaAtual.id);
+    if (tarefaArquivo) formData.append('arquivo', tarefaArquivo);
+    formData.append('link_externo', tarefaLink);
+    formData.append('observacoes', tarefaObs);
+
+    try {
+      await api.post('/tarefas/entregar', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setTarefaEnviada(true);
+      alert("Tarefa enviada com sucesso!");
       if (!aulaAtual.concluida) alternarConclusaoAula();
+    } catch (erro) {
+      alert("Erro ao enviar tarefa.");
+    } finally {
+      setEnviandoTarefa(false);
     }
   };
 
@@ -205,7 +257,7 @@ export default function VisualizadorDeCurso() {
 
           {percentagem === 100 && (
             <button
-              onClick={() => window.open(`/certificado/${cursoAtivo.id}`, '_blank')}
+              onClick={emitirCertificado}
               className="mt-4 w-full bg-yellow-500 hover:bg-yellow-400 text-black text-sm font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors">
               🏆 Emitir Certificado
             </button>
@@ -341,13 +393,13 @@ export default function VisualizadorDeCurso() {
                             <p className="font-bold text-[#2B2B2B] mb-4 text-lg">{idx + 1}. {p.pergunta}</p>
                             <div className="space-y-2">
                               {p.opcoes.map((op, i) => (
-                                <label key={i} className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${respostasQuiz[p.id] === op ? 'bg-blue-50 border-[#3347FF]' : 'bg-white border-gray-200 hover:border-blue-200'}`}>
+                                <label key={i} className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${respostasQuiz[p.id] === i ? 'bg-blue-50 border-[#3347FF]' : 'bg-white border-gray-200 hover:border-blue-200'}`}>
                                   <input
                                     type="radio"
                                     name={`pergunta-${p.id}`}
-                                    value={op}
-                                    checked={respostasQuiz[p.id] === op}
-                                    onChange={() => setRespostasQuiz({ ...respostasQuiz, [p.id]: op })}
+                                    value={i}
+                                    checked={respostasQuiz[p.id] === i}
+                                    onChange={() => responderQuestao(p.id, i)}
                                     className="mt-1 w-4 h-4 text-[#3347FF] focus:ring-[#3347FF]"
                                   />
                                   <span className="text-[#2B2B2B] font-medium">{op}</span>
@@ -373,6 +425,46 @@ export default function VisualizadorDeCurso() {
                           )}
                         </div>
                       </div>
+                    )}
+                  </div>
+                )}
+
+                {/* TAREFA / ENTREGA DE TRABALHO */}
+                {aulaAtual.tipo === 'tarefa' && (
+                  <div className="p-8 bg-white max-w-2xl mx-auto border border-gray-100 rounded-2xl shadow-sm my-8">
+                    <div className="flex items-center gap-4 mb-8">
+                      <div className="w-14 h-14 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center text-2xl shadow-inner">📤</div>
+                      <div>
+                        <h3 className="text-xl font-black text-[#2B2B2B]">Entrega de Trabalho</h3>
+                        <p className="text-gray-500 text-sm font-medium">Submeta o seu trabalho (ficheiro ou link).</p>
+                      </div>
+                    </div>
+
+                    {tarefaEnviada ? (
+                      <div className="bg-green-50 border-2 border-green-100 p-8 rounded-2xl text-center">
+                        <div className="w-16 h-16 bg-green-500 text-white rounded-full flex items-center justify-center text-2xl mx-auto mb-4">✓</div>
+                        <h4 className="font-bold text-green-900">Trabalho Enviado!</h4>
+                        <p className="text-green-700 text-sm mt-1">Aguarde a correção do seu professor.</p>
+                        <button onClick={() => setTarefaEnviada(false)} className="mt-6 text-xs font-bold text-green-800 bg-green-200/50 px-4 py-2 rounded-lg">Reenviar Trabalho</button>
+                      </div>
+                    ) : (
+                      <form onSubmit={enviarTarefa} className="space-y-6">
+                        <div className="p-4 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                          <label className="block text-xs font-black text-gray-400 uppercase mb-3">Ficheiro (Entrega)</label>
+                          <input type="file" onChange={e => setTarefaArquivo(e.target.files[0])} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-[#1C1D1F] file:text-white" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-black text-gray-400 uppercase mb-2">Link de Entrega (Opcional)</label>
+                          <input type="url" placeholder="G-Drive, GitHub..." value={tarefaLink} onChange={e => setTarefaLink(e.target.value)} className="w-full px-4 py-2 rounded-xl bg-gray-50 border border-gray-200" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-black text-gray-400 uppercase mb-2">Comentários</label>
+                          <textarea rows="3" placeholder="Informações extras..." value={tarefaObs} onChange={e => setTarefaObs(e.target.value)} className="w-full px-4 py-2 rounded-xl bg-gray-50 border border-gray-200" />
+                        </div>
+                        <button type="submit" disabled={enviandoTarefa} className="w-full bg-[#3347FF] hover:bg-blue-700 text-white font-black py-4 rounded-xl shadow-lg disabled:opacity-50 transition-all">
+                          {enviandoTarefa ? 'A enviar...' : '📤 Submeter Trabalho'}
+                        </button>
+                      </form>
                     )}
                   </div>
                 )}

@@ -72,17 +72,44 @@ export default function Checkout() {
     };
 
     const finalizarCompra = async () => {
-        alert(`Compra de R$ ${calcularTotal()} simulada com sucesso! Bem-vindo ao curso.`);
-        // Aqui simularia a criação da matrícula
         try {
-            await api.post('/auth/matricular-teste', { curso_id: cursoId }); // MOCK endpoint
-            // E matricular nos bumps também
-            for (let b of bumpsSelecionados) {
-                await api.post('/auth/matricular-teste', { curso_id: b.curso_oferta_id });
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert("Você precisa estar logado para comprar. Redirecionando para login...");
+                navigate('/login');
+                return;
             }
-            navigate('/dashboard');
+
+            // Precisamos do ID do usuário logado. Como não o temos diretamente aqui (ou poderíamos ter via Context/Auth),
+            // a abordagem mais segura é o backend pegar do token, mas o mock webhook atual espera `usuario_id` no body.
+            // Para resolver isso de forma simples e segura, vamos adicionar o token no header e adaptar o webhook para lê-lo caso sinta falta, 
+            // ou melhor ainda: buscar do token no frontend decodificando-o.
+            // Simplificação para o mock: decodificar o token JWT básico
+            const payloadBase64 = token.split('.')[1];
+            const decodificado = JSON.parse(atob(payloadBase64));
+            const usuarioId = decodificado.id;
+
+            // 1. Matricular no Curso Principal
+            await api.post('/webhooks/simular-pagamento', {
+                curso_id: cursoId,
+                usuario_id: usuarioId,
+                valor_pago: (planoSelecionado?.preco || 0) * (1 - desconto / 100)
+            });
+
+            // 2. Matricular nos Bumps
+            for (let b of bumpsSelecionados) {
+                await api.post('/webhooks/simular-pagamento', {
+                    curso_id: b.curso_oferta_id,
+                    usuario_id: usuarioId,
+                    valor_pago: b.preco_oferta
+                });
+            }
+
+            alert(`Compra de R$ ${calcularTotal()} aprovada! Bem-vindo ao curso.`);
+            navigate('/aluno');
         } catch (e) {
-            navigate('/dashboard');
+            console.error(e);
+            alert("Erro ao simular compra. Verifique o console.");
         }
     };
 

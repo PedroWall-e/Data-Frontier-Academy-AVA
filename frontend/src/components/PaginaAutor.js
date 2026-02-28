@@ -126,7 +126,7 @@ export default function PaginaAutor() {
                                             {curso.titulo}
                                         </h3>
                                         <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
-                                            <span className="font-black text-[#2B2B2B] text-lg">€ {curso.preco}</span>
+                                            <span className="font-black text-[#2B2B2B] text-lg">R$ {curso.preco}</span>
                                             <span className="text-sm font-bold text-[#3347FF] bg-blue-50 px-3 py-1.5 rounded-lg group-hover:bg-[#3347FF] group-hover:text-white transition-colors">
                                                 Ver Detalhes →
                                             </span>

@@ -25,6 +25,8 @@ CREATE TABLE IF NOT EXISTS cursos (
     -- Course Landing Page Details
     requisitos TEXT,
     publico_alvo TEXT,
+    -- Multi-Hub / Scope
+    escopo ENUM('LIVRE', 'TECNICO', 'POS', 'UNIVERSIDADE') DEFAULT 'LIVRE',
     -- Branding & White-Label
     cor_primaria VARCHAR(7) DEFAULT '#00cc66',
     cor_secundaria VARCHAR(7) DEFAULT '#222222',

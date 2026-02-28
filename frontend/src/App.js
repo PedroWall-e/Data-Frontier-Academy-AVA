@@ -95,7 +95,7 @@ function App() {
             <Route path="/checkout/:cursoId" element={<Checkout />} />
             <Route path="/curso/:id" element={<PaginaCurso />} />
             <Route path="/autor/:id" element={<PaginaAutor />} />
-            <Route path="/certificado/:cursoId" element={<Certificado />} />
+            <Route path="/certificado/:codigo" element={<Certificado />} />
 
             <Route path="/painel" element={
               <RotaProtegida roles={['aluno', 'produtor', 'admin']}>

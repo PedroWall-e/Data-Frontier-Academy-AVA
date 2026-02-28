@@ -47,6 +47,94 @@ async function migrate() {
         await runQuery("ALTER TABLE cursos ADD COLUMN requisitos TEXT");
         await runQuery("ALTER TABLE cursos ADD COLUMN publico_alvo TEXT");
 
+        // Phase 7: Multi-Hub
+        await runQuery("ALTER TABLE cursos ADD COLUMN escopo ENUM('LIVRE', 'TECNICO', 'POS', 'UNIVERSIDADE') DEFAULT 'LIVRE'");
+
+        // Phase 8: Reviews e Avaliações
+        await runQuery(`
+            CREATE TABLE IF NOT EXISTS avaliacoes (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                curso_id INT NOT NULL,
+                usuario_id INT NOT NULL,
+                nota INT NOT NULL CHECK (nota BETWEEN 1 AND 5),
+                comentario TEXT,
+                data DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (curso_id) REFERENCES cursos(id) ON DELETE CASCADE,
+                FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+                UNIQUE KEY unico_avaliacao (curso_id, usuario_id)
+            )
+        `);
+
+        // Phase 9: Quizzes e Testes Básicos (Fase 2)
+        await runQuery(`
+            CREATE TABLE IF NOT EXISTS questoes_quiz (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                aula_id INT NOT NULL,
+                pergunta TEXT NOT NULL,
+                opcoes JSON NOT NULL,
+                resposta_correta INT NOT NULL,
+                explicacao TEXT,
+                FOREIGN KEY (aula_id) REFERENCES aulas(id) ON DELETE CASCADE
+            )
+        `);
+        await runQuery(`
+            CREATE TABLE IF NOT EXISTS respostas_quiz (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                usuario_id INT NOT NULL,
+                questao_id INT NOT NULL,
+                acertou BOOLEAN NOT NULL,
+                data DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+                FOREIGN KEY (questao_id) REFERENCES questoes_quiz(id) ON DELETE CASCADE,
+                UNIQUE KEY unica_resposta (usuario_id, questao_id)
+            )
+        `);
+
+        // Phase 10: Certificados Dinâmicos (Fase 2)
+        await runQuery(`
+            CREATE TABLE IF NOT EXISTS certificados (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                codigo_validacao VARCHAR(50) NOT NULL UNIQUE,
+                curso_id INT NOT NULL,
+                usuario_id INT NOT NULL,
+                data_emissao DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (curso_id) REFERENCES cursos(id) ON DELETE CASCADE,
+                FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+            )
+        `);
+
+        // Phase 11: Operação Acadêmica e Ensino Formal (Fase 3 inicial)
+        await runQuery(`
+            CREATE TABLE IF NOT EXISTS turmas (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                curso_id INT NOT NULL,
+                nome VARCHAR(100) NOT NULL,
+                data_inicio DATE,
+                data_fim DATE,
+                capacidade INT,
+                criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (curso_id) REFERENCES cursos(id) ON DELETE CASCADE
+            )
+        `);
+        // Adiciona turma_id em matriculas
+        await runQuery("ALTER TABLE matriculas ADD COLUMN turma_id INT NULL");
+        await runQuery("ALTER TABLE matriculas ADD FOREIGN KEY (turma_id) REFERENCES turmas(id) ON DELETE SET NULL");
+
+        // Tabela de tarefas enviadas pelos alunos
+        await runQuery(`
+            CREATE TABLE IF NOT EXISTS entregas_tarefa (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                aula_id INT NOT NULL,
+                usuario_id INT NOT NULL,
+                arquivo_url VARCHAR(255) NOT NULL,
+                nota DECIMAL(4,2),
+                feedback TEXT,
+                data_envio DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (aula_id) REFERENCES aulas(id) ON DELETE CASCADE,
+                FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+            )
+        `);
+
         // Admin User (Force reset/create)
         const salt = await bcrypt.genSalt(10);
         const hash = await bcrypt.hash('admin123', salt);

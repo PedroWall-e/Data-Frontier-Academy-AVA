@@ -15,9 +15,10 @@ export default function GestaoCurso() {
   const [novaAulaDrip, setNovaAulaDrip] = useState(0);
   const [moduloSelecionado, setModuloSelecionado] = useState(null);
   const [aulaParaQuiz, setAulaParaQuiz] = useState(null);
+  const [perguntasQuiz, setPerguntasQuiz] = useState([]);
   const [pergunta, setPergunta] = useState('');
   const [opcoes, setOpcoes] = useState(['', '', '', '']);
-  const [correta, setCorreta] = useState('');
+  const [correta, setCorreta] = useState(0); // Agora guarda o índice (0, 1, 2, 3)
   const [abaAtiva, setAbaAtiva] = useState('construtor');
   const [alunosMatriculados, setAlunosMatriculados] = useState([]);
   const [cupons, setCupons] = useState([]);
@@ -39,6 +40,15 @@ export default function GestaoCurso() {
   const [todosCursos, setTodosCursos] = useState([]);
   const [analytics, setAnalytics] = useState({ geral: {}, mensal: [] });
   const [pedagogico, setPedagogico] = useState({ progresso_medio: 0, quiz_aprovacao: 0 });
+  const [turmas, setTurmas] = useState([]);
+  const [novaTurma, setNovaTurma] = useState({ nome: '', data_inicio: '', data_fim: '' });
+
+  // Estados para Correção de Tarefas
+  const [aulaParaCorrecao, setAulaParaCorrecao] = useState(null);
+  const [entregas, setEntregas] = useState([]);
+  const [feedbackNota, setFeedbackNota] = useState({ id: null, nota: '', feedback: '' });
+
+  const [gradebook, setGradebook] = useState([]);
 
   const carregarCurso = () => {
     api.get(`/cursos/produtor/${id}`)
@@ -70,6 +80,12 @@ export default function GestaoCurso() {
       api.get(`/cursos/produtor/curso/${id}/analytics-pedagogico`)
         .then(res => setPedagogico(res.data))
         .catch(erro => console.error(erro));
+      api.get(`/turmas/curso/${id}`)
+        .then(res => setTurmas(res.data))
+        .catch(erro => console.error(erro));
+      api.get(`/cursos/produtor/curso/${id}/gradebook`)
+        .then(res => setGradebook(res.data))
+        .catch(erro => console.error(erro));
     }
   }, [id, token]);
 
@@ -87,6 +103,18 @@ export default function GestaoCurso() {
       });
     }
   }, [curso]);
+
+  const carregarPerguntasQuiz = (aulaId) => {
+    api.get(`/cursos/aulas/${aulaId}/quiz-admin`)
+      .then(res => setPerguntasQuiz(res.data))
+      .catch(erro => console.error(erro));
+  };
+
+  useEffect(() => {
+    if (aulaParaQuiz) {
+      carregarPerguntasQuiz(aulaParaQuiz.id);
+    }
+  }, [aulaParaQuiz]);
 
   const matricularManual = async (e) => {
     e.preventDefault();
@@ -160,6 +188,54 @@ export default function GestaoCurso() {
     } catch (erro) { alert("Erro ao criar cupom."); }
   };
 
+  const criarTurma = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/turmas', { ...novaTurma, curso_id: id });
+      setNovaTurma({ nome: '', data_inicio: '', data_fim: '' });
+      const res = await api.get(`/turmas/curso/${id}`);
+      setTurmas(res.data);
+    } catch (erro) { alert("Erro ao criar turma."); }
+  };
+
+  const vincularTurma = async (matriculaId, turmaId) => {
+    try {
+      await api.put('/turmas/vincular-aluno', { matricula_id: matriculaId, turma_id: turmaId || null });
+      const res = await api.get(`/cursos/produtor/curso/${id}/alunos`);
+      setAlunosMatriculados(res.data);
+    } catch (erro) { alert("Erro ao vincular turma."); }
+  };
+
+  const excluirTurma = async (turmaId) => {
+    if (!window.confirm("Remover turma?")) return;
+    try {
+      await api.delete(`/turmas/${turmaId}`);
+      const res = await api.get(`/turmas/curso/${id}`);
+      setTurmas(res.data);
+    } catch (erro) { alert("Erro ao remover turma."); }
+  };
+
+  const abrirCorrecao = async (aula) => {
+    setAulaParaCorrecao(aula);
+    try {
+      const res = await api.get(`/tarefas/aula/${aula.id}/entregas`);
+      setEntregas(res.data);
+    } catch (erro) { alert("Erro ao buscar entregas."); }
+  };
+
+  const enviarFeedback = async (e) => {
+    e.preventDefault();
+    try {
+      await api.put(`/tarefas/feedback/${feedbackNota.id}`, {
+        nota: feedbackNota.nota,
+        feedback: feedbackNota.feedback
+      });
+      alert("Feedback enviado!");
+      setFeedbackNota({ id: null, nota: '', feedback: '' });
+      abrirCorrecao(aulaParaCorrecao);
+    } catch (erro) { alert("Erro ao enviar feedback."); }
+  };
+
   const criarModulo = async (e) => {
     e.preventDefault();
     if (!novoModuloTitulo.trim()) return;
@@ -191,14 +267,22 @@ export default function GestaoCurso() {
       await api.post(`/cursos/aulas/${aulaParaQuiz.id}/quiz`, {
         pergunta,
         opcoes,
-        resposta_correta: correta,
-        nota_corte: 70
+        resposta_correta: parseInt(correta),
+        explicacao: ""
       });
-      alert("Pergunta adicionada!");
       setPergunta('');
       setOpcoes(['', '', '', '']);
-      setCorreta('');
+      setCorreta(0);
+      carregarPerguntasQuiz(aulaParaQuiz.id);
     } catch (erro) { alert("Erro ao adicionar pergunta."); }
+  };
+
+  const excluirPergunta = async (questaoId) => {
+    if (!window.confirm("Remover esta questão?")) return;
+    try {
+      await api.delete(`/cursos/aulas/quiz/${questaoId}`);
+      carregarPerguntasQuiz(aulaParaQuiz.id);
+    } catch (erro) { alert("Erro ao excluir pergunta."); }
   };
 
   if (!curso) return <div className="min-h-screen flex items-center justify-center bg-[#F9F8F6] font-sans text-gray-500 font-bold">A carregar construtor...</div>;
@@ -206,6 +290,8 @@ export default function GestaoCurso() {
   const tabs = [
     { id: 'construtor', label: '🔨 Construtor' },
     { id: 'alunos', label: `👥 Alunos (${alunosMatriculados.length})` },
+    { id: 'turmas', label: `📅 Turmas (${turmas.length})` },
+    { id: 'gradebook', label: '📊 Diário Acadêmico' },
     { id: 'cupons', label: `🎟️ Cupons (${cupons.length})` },
     { id: 'planos', label: `🏷️ Planos (${planos.length})` },
     { id: 'ofertas', label: `💰 Ofertas (${ofertas.length})` },
@@ -288,6 +374,7 @@ export default function GestaoCurso() {
                               <option value="audio">Áudio (URL)</option>
                               <option value="quiz">Quiz</option>
                               <option value="anexo">Anexo para Download</option>
+                              <option value="tarefa">Tarefa / Entrega de Trabalho</option>
                             </select>
                             <input type="number" placeholder="Drip (Dias)" title="Liberar após X dias da compra" value={novaAulaDrip} onChange={e => setNovaAulaDrip(e.target.value)} className="w-24 px-4 py-3 rounded-lg bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#3347FF]/30 font-medium text-center" />
                           </div>
@@ -316,6 +403,7 @@ export default function GestaoCurso() {
                               {aula.tipo === 'audio' && '🔊'}
                               {aula.tipo === 'quiz' && '❓'}
                               {aula.tipo === 'anexo' && '📎'}
+                              {aula.tipo === 'tarefa' && '📤'}
                             </div>
                             <div>
                               <strong className="text-[#2B2B2B] font-medium block">{aula.titulo}</strong>
@@ -324,6 +412,9 @@ export default function GestaoCurso() {
                           </div>
                           {aula.tipo === 'quiz' && (
                             <button onClick={() => setAulaParaQuiz(aula)} className="opacity-0 group-hover:opacity-100 text-xs font-bold bg-[#3347FF] text-white px-3 py-1.5 rounded transition-all">⚙️ Questões</button>
+                          )}
+                          {aula.tipo === 'tarefa' && (
+                            <button onClick={() => abrirCorrecao(aula)} className="opacity-0 group-hover:opacity-100 text-xs font-bold bg-orange-500 text-white px-3 py-1.5 rounded transition-all">📋 Corrigir</button>
                           )}
                         </li>
                       ))}
@@ -373,6 +464,14 @@ export default function GestaoCurso() {
                           </div>
                         </td>
                         <td className="px-6 py-4 text-right">
+                          <select
+                            value={aluno.turma_id || ''}
+                            onChange={(e) => vincularTurma(aluno.matricula_id, e.target.value)}
+                            className="mr-2 px-2 py-1 text-xs border rounded bg-white"
+                          >
+                            <option value="">Sem Turma</option>
+                            {turmas.map(t => <option key={t.id} value={t.id}>{t.nome}</option>)}
+                          </select>
                           <button
                             onClick={() => alterarStatusMatricula(aluno.matricula_id, aluno.suspensa)}
                             className={`px-4 py-1.5 rounded-md text-xs font-bold transition-colors ${aluno.suspensa ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'}`}>
@@ -387,7 +486,128 @@ export default function GestaoCurso() {
             </div>
           )}
 
+          {/* Aba TURMAS */}
+          {abaAtiva === 'turmas' && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-extrabold text-[#2B2B2B]">Gestão de Turmas (Cohorts)</h2>
+              <p className="text-gray-500 mb-6">Agrupe alunos em turmas com datas específicas de início e fim.</p>
+
+              <form onSubmit={criarTurma} className="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 bg-gray-50 border border-gray-200 rounded-xl items-end">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 mb-1">Nome da Turma</label>
+                  <input type="text" required value={novaTurma.nome} onChange={e => setNovaTurma({ ...novaTurma, nome: e.target.value })} className="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500/20" placeholder="Ex: Turma A - 2024" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 mb-1">Data Início</label>
+                  <input type="date" required value={novaTurma.data_inicio} onChange={e => setNovaTurma({ ...novaTurma, data_inicio: e.target.value })} className="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500/20" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 mb-1">Data Fim (Opcional)</label>
+                  <input type="date" value={novaTurma.data_fim} onChange={e => setNovaTurma({ ...novaTurma, data_fim: e.target.value })} className="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500/20" />
+                </div>
+                <button type="submit" className="bg-[#3347FF] hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg transition-all shadow-md">Criar Turma</button>
+              </form>
+
+              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <table className="w-full text-left">
+                  <thead className="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase">
+                    <tr>
+                      <th className="px-6 py-4">Nome</th>
+                      <th className="px-6 py-4">Início</th>
+                      <th className="px-6 py-4">Fim</th>
+                      <th className="px-6 py-4 text-right">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {turmas.length === 0 ? (
+                      <tr><td colSpan="4" className="text-center py-8 text-gray-500">Nenhuma turma criada ainda.</td></tr>
+                    ) : turmas.map(t => (
+                      <tr key={t.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 font-bold">{t.nome}</td>
+                        <td className="px-6 py-4">{new Date(t.data_inicio).toLocaleDateString()}</td>
+                        <td className="px-6 py-4">{t.data_fim ? new Date(t.data_fim).toLocaleDateString() : '-'}</td>
+                        <td className="px-6 py-4 text-right">
+                          <button onClick={() => excluirTurma(t.id)} className="text-red-500 hover:underline text-xs font-bold">Excluir</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Aba DIÁRIO ACADÊMICO */}
+          {abaAtiva === 'gradebook' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h2 className="text-2xl font-extrabold text-[#2B2B2B]">Diário Acadêmico</h2>
+                  <p className="text-gray-500 text-sm">Acompanhamento consolidado de notas e progresso.</p>
+                </div>
+                <button onClick={() => window.print()} className="bg-white border border-gray-300 text-[10px] font-black px-4 py-2 rounded-lg hover:bg-gray-50 transition-all uppercase tracking-widest">Gerar Relatório PDF</button>
+              </div>
+
+              <div className="overflow-x-auto rounded-2xl border border-gray-200 shadow-sm">
+                <table className="w-full text-left bg-white whitespace-nowrap">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-200 text-[10px] uppercase tracking-wider text-gray-400 font-black">
+                      <th className="px-6 py-5">Aluno / Turma</th>
+                      <th className="px-6 py-5">Status / Progresso</th>
+                      <th className="px-6 py-5">Média Quiz</th>
+                      <th className="px-6 py-5">Média Tarefas</th>
+                      <th className="px-6 py-5 text-right">Média Final</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {gradebook.length === 0 ? (
+                      <tr><td colSpan="5" className="text-center py-20 text-gray-400 italic">Nenhum dado acadêmico disponível ainda.</td></tr>
+                    ) : gradebook.map(row => {
+                      const mQuiz = parseFloat(row.media_quiz || 0);
+                      const mTarefa = parseFloat(row.media_tarefas || 0);
+                      const final = (mQuiz + mTarefa) / (row.media_quiz && row.media_tarefas ? 2 : 1);
+
+                      return (
+                        <tr key={row.aluno_id} className="hover:bg-blue-50/20 transition-colors">
+                          <td className="px-6 py-5">
+                            <div className="font-bold text-[#2B2B2B] text-sm">{row.aluno_nome}</div>
+                            <div className="text-[9px] text-blue-600 font-black uppercase tracking-widest">{row.turma_nome || 'Sem Turma'}</div>
+                          </td>
+                          <td className="px-6 py-5">
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs font-black text-gray-700">{row.progresso}%</span>
+                              <div className="w-20 h-2 bg-gray-100 rounded-full overflow-hidden shadow-inner">
+                                <div className={`h-full ${row.progresso === 100 ? 'bg-green-500' : 'bg-[#3347FF]'}`} style={{ width: `${row.progresso}%` }}></div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-5">
+                            <span className={`text-sm font-black ${mQuiz >= 7 ? 'text-green-600' : 'text-gray-400'}`}>
+                              {mQuiz > 0 ? mQuiz.toFixed(1) : '-'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-5">
+                            <span className={`text-sm font-black ${mTarefa >= 7 ? 'text-orange-600' : 'text-gray-400'}`}>
+                              {mTarefa > 0 ? mTarefa.toFixed(1) : '-'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-5 text-right">
+                            <span className={`inline-block px-4 py-1.5 rounded-xl text-xs font-black shadow-sm ${final >= 7 ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-100'}`}>
+                              {final > 0 ? final.toFixed(1) : 'S/N'}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           {/* Aba CUPONS */}
+
+
           {abaAtiva === 'cupons' && (
             <div>
               <h2 className="text-2xl font-extrabold text-[#2B2B2B] mb-2">Cupons de Desconto</h2>
@@ -451,7 +671,7 @@ export default function GestaoCurso() {
                 </div>
                 <div className="flex gap-2 col-span-1 md:col-span-1">
                   <div className="flex-1">
-                    <label className="block text-xs font-bold text-gray-500 mb-1">Preço (€)</label>
+                    <label className="block text-xs font-bold text-gray-500 mb-1">Preço (R$)</label>
                     <input type="number" step="0.01" placeholder="99.99" required value={novoPlano.preco} onChange={e => setNovoPlano({ ...novoPlano, preco: e.target.value })} className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-[#3347FF]/30 font-medium" />
                   </div>
                   <div className="flex-1">
@@ -481,7 +701,7 @@ export default function GestaoCurso() {
                         <td className="px-6 py-4 text-sm font-medium text-gray-600">
                           <span className="inline-block bg-gray-100 px-2 py-1 rounded text-xs">{plano.tipo === 'unico' ? 'Único' : (plano.tipo === 'mensal' ? 'Mensal' : 'Anual')}</span>
                         </td>
-                        <td className="px-6 py-4 font-bold text-[#3347FF]">€ {plano.preco}</td>
+                        <td className="px-6 py-4 font-bold text-[#3347FF]">R$ {plano.preco}</td>
                         <td className="px-6 py-4 text-sm text-gray-500">{plano.trial_dias > 0 ? `${plano.trial_dias} dias oferecidos` : '-'}</td>
                       </tr>
                     ))}
@@ -516,7 +736,7 @@ export default function GestaoCurso() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-1">Preço com desconto (€)</label>
+                    <label className="block text-xs font-bold text-gray-500 mb-1">Preço com desconto (R$)</label>
                     <input type="number" step="0.01" placeholder="Ex: 19.90" required value={novaOferta.preco} onChange={e => setNovaOferta({ ...novaOferta, preco: e.target.value })} className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-[#3347FF]/30 font-medium" />
                   </div>
                 </div>
@@ -552,7 +772,7 @@ export default function GestaoCurso() {
                             {of.tipo === 'order_bump' ? '⚡ Order Bump' : '🚀 Upsell'}
                           </span>
                         </td>
-                        <td className="px-6 py-4 font-extrabold text-[#3347FF]">€ {of.preco_oferta}</td>
+                        <td className="px-6 py-4 font-extrabold text-[#3347FF]">R$ {of.preco_oferta}</td>
                         <td className="px-6 py-4 text-sm text-gray-600 truncate max-w-xs" title={of.titulo_oferta}>{of.titulo_oferta}</td>
                       </tr>
                     ))}
@@ -572,7 +792,7 @@ export default function GestaoCurso() {
                 <div className="bg-[#F0F3FF] p-6 rounded-2xl border border-blue-100 relative overflow-hidden">
                   <div className="absolute top-0 right-0 p-4 opacity-20 text-4xl">💰</div>
                   <span className="text-sm font-bold text-[#3347FF] mb-1 block">Faturamento Total</span>
-                  <h2 className="text-3xl font-extrabold text-[#2B2B2B]">€ {analytics.geral?.faturamento_total || '0.00'}</h2>
+                  <h2 className="text-3xl font-extrabold text-[#2B2B2B]">R$ {analytics.geral?.faturamento_total || '0.00'}</h2>
                 </div>
                 <div className="bg-[#F9F8F6] p-6 rounded-2xl border border-gray-200">
                   <span className="text-sm font-bold text-gray-500 mb-1 block">Total de Alunos Matriculados (Vendas)</span>
@@ -580,7 +800,7 @@ export default function GestaoCurso() {
                 </div>
                 <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
                   <span className="text-sm font-bold text-[#B2624F] mb-1 block">Ticket Médio (LTV base)</span>
-                  <h2 className="text-3xl font-extrabold text-[#2B2B2B]">€ {parseFloat(analytics.geral?.ticket_medio || 0).toFixed(2)} / aluno</h2>
+                  <h2 className="text-3xl font-extrabold text-[#2B2B2B]">R$ {parseFloat(analytics.geral?.ticket_medio || 0).toFixed(2)} / aluno</h2>
                 </div>
               </div>
 
@@ -682,6 +902,16 @@ export default function GestaoCurso() {
                         <label className="block text-sm font-bold text-[#2B2B2B] mb-2">Pré-requisitos (O que o aluno precisa saber antes?)</label>
                         <textarea placeholder="Ex: Nenhum conhecimento prévio necessário, ou: Conhecimento básico em HTML/CSS..." value={branding.requisitos} onChange={e => setBranding({ ...branding, requisitos: e.target.value })} className="w-full px-4 py-3 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#3347FF]/30 font-medium min-h-[80px] resize-y" />
                       </div>
+
+                      <div className="pt-2">
+                        <label className="block text-sm font-bold text-[#2B2B2B] mb-2">Hub de Distribuição (Em qual ecossistema este curso será exibido?)</label>
+                        <select value={branding.escopo || 'LIVRE'} onChange={e => setBranding({ ...branding, escopo: e.target.value })} className="w-full px-4 py-3 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#3347FF]/30 font-medium font-bold text-[#3347FF]">
+                          <option value="LIVRE">Hub: Cursos Livres e Profissionalizantes</option>
+                          <option value="TECNICO">Hub: Cursos Técnicos (MEC)</option>
+                          <option value="POS">Hub: Pós-Graduação (Lato Sensu)</option>
+                          <option value="UNIVERSIDADE">Hub: Universidade Integrada (In-Company)</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
 
@@ -727,7 +957,7 @@ export default function GestaoCurso() {
         </div>
       </main>
 
-      {/* MODAL PARA QUESTÕES DO QUIZ DE FORMA SIMPLES */}
+      {/* MODAL PARA QUESTÕES DO QUIZ */}
       {aulaParaQuiz && (
         <div className="fixed inset-0 bg-[#1C1D1F]/90 backdrop-blur-sm flex justify-center items-center z-50 p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl relative animate-in fade-in zoom-in duration-200 border border-gray-100">
@@ -737,43 +967,138 @@ export default function GestaoCurso() {
             </div>
 
             <form onSubmit={adicionarPergunta} className="p-6 md:p-8 space-y-6">
-
               <div>
-                <label className="block text-sm font-bold text-[#2B2B2B] mb-2">Construção Enunciado / Nova Pergunta Base</label>
-                <textarea value={pergunta} onChange={e => setPergunta(e.target.value)} required className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3347FF]/30 transition-all font-medium min-h-[100px] resize-y" placeholder="Qual é o principal objectivo de...?" />
+                <label className="block text-sm font-bold text-[#2B2B2B] mb-2">Pergunta</label>
+                <textarea value={pergunta} onChange={e => setPergunta(e.target.value)} required className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3347FF]/30 transition-all font-medium min-h-[100px] resize-y" />
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-[#2B2B2B] mb-3">Definição das Opções Múltiplas Escolhas (Total 4 Slots Obrigatórios):</label>
+                <label className="block text-sm font-bold text-[#2B2B2B] mb-3">Opções:</label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {opcoes.map((op, i) => (
                     <div key={i} className="flex gap-2">
                       <span className="flex-shrink-0 w-8 h-12 flex items-center justify-center font-bold text-gray-400 bg-gray-50 rounded-lg border border-gray-200">{String.fromCharCode(65 + i)}</span>
-                      <input type="text" value={op} onChange={e => { const n = [...opcoes]; n[i] = e.target.value; setOpcoes(n); }} required className="flex-1 px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3347FF]/30 transition-all font-medium" placeholder={`Possível resposta alternativa indicadora...`} />
+                      <input type="text" value={op} onChange={e => { const n = [...opcoes]; n[i] = e.target.value; setOpcoes(n); }} required className="flex-1 px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3347FF]/30 transition-all" />
                     </div>
                   ))}
                 </div>
               </div>
 
               <div className="pt-4 border-t border-gray-100">
-                <label className="block text-sm font-bold text-[#2B2B2B] mb-2 flex items-center gap-2"><span>✅</span> Eleger Opção Correta para Gabarito Respostas:</label>
-                <select value={correta} onChange={e => setCorreta(e.target.value)} required className="w-full px-4 py-3 rounded-lg bg-green-50/50 border border-green-200 focus:bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-500/30 transition-all font-bold text-green-800 appearance-none">
-                  <option value="" disabled>Selecione a chave absoluta do gabarito...</option>
-                  {opcoes.map((op, i) => op && <option key={i} value={op}>{String.fromCharCode(65 + i)} - {op}</option>)}
+                <label className="block text-sm font-bold text-[#2B2B2B] mb-2">Opção Correta:</label>
+                <select value={correta} onChange={e => setCorreta(e.target.value)} required className="w-full px-4 py-3 rounded-lg border border-gray-200">
+                  {opcoes.map((op, i) => <option key={i} value={i}>{String.fromCharCode(65 + i)} - {op || `Opção ${i + 1}`}</option>)}
                 </select>
               </div>
 
-              <div className="pt-6">
-                <button type="submit" className="w-full bg-[#3347FF] hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-500/30 transition-all text-lg flex justify-center items-center gap-2">
-                  Adicionar Questão Validada à Base de Dados
-                </button>
-              </div>
-
+              <button type="submit" className="w-full bg-[#3347FF] hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all">Adicionar Questão</button>
             </form>
+
+            <div className="p-6 md:p-8 border-t border-gray-100 bg-gray-50/50 max-h-[300px] overflow-y-auto">
+              <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Questões Salvas ({perguntasQuiz.length})</h4>
+              <div className="space-y-4">
+                {perguntasQuiz.length === 0 ? <p className="text-gray-400 text-sm italic">Nenhuma questão.</p> : perguntasQuiz.map((p, idx) => (
+                  <div key={p.id} className="bg-white p-4 rounded-xl border border-gray-200 relative">
+                    <button onClick={() => excluirPergunta(p.id)} className="absolute top-2 right-2 text-gray-300 hover:text-red-500">✕</button>
+                    <p className="font-bold text-[#2B2B2B] text-sm">{idx + 1}. {p.pergunta}</p>
+                    <div className="mt-2 text-xs text-gray-500">
+                      Resposta correta: {String.fromCharCode(65 + p.resposta_correta)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}
+      {/* MODAL PARA CORREÇÃO DE TAREFAS */}
+      {aulaParaCorrecao && (
+        <div className="fixed inset-0 bg-[#1C1D1F]/90 backdrop-blur-sm flex justify-center items-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl w-full max-w-4xl shadow-2xl relative animate-in fade-in zoom-in duration-200 border border-gray-100 flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between shrink-0">
+              <h3 className="text-xl font-extrabold text-[#2B2B2B] flex items-center gap-2"><span>📂</span> Entregas: <span className="text-orange-500">{aulaParaCorrecao.titulo}</span></h3>
+              <button onClick={() => setAulaParaCorrecao(null)} className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition-colors">✕</button>
+            </div>
 
+            <div className="flex-1 overflow-y-auto p-6 md:p-8">
+              {entregas.length === 0 ? (
+                <div className="text-center py-20">
+                  <span className="text-4xl block mb-4">📭</span>
+                  <p className="text-gray-400 font-medium font-italic">Nenhum aluno enviou esta tarefa ainda.</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {entregas.map(entrega => (
+                    <div key={entrega.id} className="bg-gray-50 rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+                      <div className="p-5 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/50">
+                        <div>
+                          <div className="font-black text-[#2B2B2B]">{entrega.aluno_nome}</div>
+                          <div className="text-xs text-gray-500 font-medium">{entrega.aluno_email} • Enviado em {new Date(entrega.data_entrega).toLocaleString()}</div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {entrega.arquivo_url && (
+                            <a href={`http://localhost:5000${entrega.arquivo_url}`} target="_blank" rel="noopener noreferrer" className="bg-[#1C1D1F] text-white text-[10px] font-black px-3 py-1.5 rounded-lg hover:bg-black transition-all">VER FICHEIRO</a>
+                          )}
+                          {entrega.link_externo && (
+                            <a href={entrega.link_externo} target="_blank" rel="noopener noreferrer" className="bg-blue-600 text-white text-[10px] font-black px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-all">LINK EXTERNO</a>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Comentário do Aluno:</label>
+                          <div className="text-sm text-gray-700 bg-white p-4 rounded-xl border border-gray-100 min-h-[80px] italic">
+                            {entrega.observacoes || "Sem observações."}
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          {feedbackNota.id === entrega.id ? (
+                            <form onSubmit={enviarFeedback} className="space-y-3 animate-in fade-in slide-in-from-right-4">
+                              <div className="flex gap-2">
+                                <div className="flex-1">
+                                  <label className="block text-[10px] font-black text-gray-400 mb-1">NOTA (0-10)</label>
+                                  <input type="number" step="0.1" min="0" max="10" required value={feedbackNota.nota} onChange={e => setFeedbackNota({ ...feedbackNota, nota: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-orange-200 focus:ring-2 focus:ring-orange-500/20 font-bold" />
+                                </div>
+                                <div className="flex-[3]">
+                                  <label className="block text-[10px] font-black text-gray-400 mb-1">FEEDBACK / CORREÇÃO</label>
+                                  <textarea required value={feedbackNota.feedback} onChange={e => setFeedbackNota({ ...feedbackNota, feedback: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-orange-200 focus:ring-2 focus:ring-orange-500/20 text-sm h-[42px] resize-none" />
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                <button type="submit" className="flex-1 bg-green-600 hover:bg-green-700 text-white text-[10px] font-black py-2 rounded-lg transition-all">SALVAR NOTA</button>
+                                <button type="button" onClick={() => setFeedbackNota({ id: null, nota: '', feedback: '' })} className="bg-white border border-gray-300 text-[10px] font-black py-2 px-3 rounded-lg">CANCELAR</button>
+                              </div>
+                            </form>
+                          ) : (
+                            <div>
+                              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Status da Avaliação:</label>
+                              {entrega.nota !== null ? (
+                                <div className="bg-green-50 border border-green-200 p-4 rounded-xl flex justify-between items-center">
+                                  <div>
+                                    <div className="text-xs font-black text-green-800">NOTA: {entrega.nota} / 10</div>
+                                    <div className="text-[10px] text-green-600 font-medium line-clamp-2">{entrega.feedback}</div>
+                                  </div>
+                                  <button onClick={() => setFeedbackNota({ id: entrega.id, nota: entrega.nota, feedback: entrega.feedback })} className="text-[10px] font-black text-blue-600 hover:underline">EDITAR</button>
+                                </div>
+                              ) : (
+                                <button onClick={() => setFeedbackNota({ id: entrega.id, nota: '', feedback: '' })} className="w-full bg-orange-100 hover:bg-orange-200 text-orange-700 font-black py-4 rounded-xl transition-all border border-orange-200/50 flex items-center justify-center gap-2">
+                                  <span>✍️</span> AVALIAR TAREFA
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-  );
+  )
 }
